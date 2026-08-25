@@ -1,5 +1,5 @@
 schema_version = "1.4"
-artifacts = ["/app/bet.json", "/app/view.txt"]
+artifacts = ["/app/bet.json", "/app/view.txt", "/app/sessions"]
 multi_step_reward_strategy = "mean"
 
 [task]

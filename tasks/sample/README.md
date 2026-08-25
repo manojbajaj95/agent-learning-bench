@@ -3,10 +3,11 @@
 Harbor multi-step sample: a short color-betting card game.
 
 Each turn is scored on its own (0 or 1). The trial score is the **sum** of twelve turns
-(one bet per card). A new deck is shuffled when the environment starts. The prompt does
-not mention memory.
+(one bet per card). A new deck is shuffled when the environment starts.
 
 See [`instruction.md`](steps/turn-1/instruction.md) for what the agent reads each turn.
+Past session logs (when using the sample [pi-sessions](../../agents/pi_sessions/) agent)
+are under `/app/sessions/`.
 
 ## Rules
 
@@ -22,9 +23,10 @@ mean reward equals points sum / 12.
 ## Environment
 
 - Base image: `ubuntu:24.04` + `python3`
-- Network: `public` (so terminus-2 can call the model API)
-- Agent timeout: 60s per turn
+- Network: `public` (so agents can call the model API)
+- Agent timeout: 60s per turn (raise with `--agent-timeout-multiplier` for pi)
 - Engine: [`environment/tally/game.py`](environment/tally/game.py) (`shuffle` | `view` | `score`)
+- `/app/sessions/`: empty at image build; filled by [pi-sessions](../../agents/pi_sessions/) on each turn shutdown
 
 `steps/*/tests/test.sh` is a settle hook only (not a pytest/Reward Kit suite). It reveals
 the card and writes `/logs/verifier/reward.txt`.
@@ -48,12 +50,24 @@ tasks/sample/
 
 ## Running
 
+Terminus-2 (default harness):
+
 ```bash
 harbor run -p tasks/sample -a terminus-2 -m openai/gpt-5.6-luna
 ```
 
+Sample [pi](https://pi.dev/) agent with session export to `/app/sessions/`:
+
+```bash
+PYTHONPATH=. harbor run -p tasks/sample \
+  -a agents.pi_sessions:PiSessionsAgent \
+  -m openai/gpt-5.6-luna \
+  --agent-timeout-multiplier 5
+```
+
 Needs `OPENAI_API_KEY`. Use the OpenAI id `gpt-5.6-luna` (dot, not hyphen).
 Do not pass `--resume-trajectory` if you want a fresh chat each turn.
+Pi often needs a higher agent timeout than terminus-2; use `--agent-timeout-multiplier` if turns time out.
 
 ## Reporting
 
@@ -67,6 +81,6 @@ duration, and tokens.
 ## Note on learning
 
 Harbor keeps the container filesystem across steps in a trial, but starts a new agent
-conversation each step by default. Across trials the container is new (new shuffle).
-Across-run learning needs a harness with its own memory; this task measures what an
-agent does with a frozen rule set and sparse reveals inside one trial.
+conversation each step by default. Across trials the container is new (new shuffle, empty
+`/app/sessions/`). The [pi-sessions](../../agents/pi_sessions/) agent copies each turn’s
+session JSONL into `/app/sessions/` on shutdown so later turns can read prior runs.

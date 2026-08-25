@@ -6,7 +6,7 @@ RUN apt-get update \
 
 COPY tally/ /opt/tally/
 RUN chmod +x /opt/tally/game.py \
-    && mkdir -p /app/world \
+    && mkdir -p /app/world /app/sessions \
     && cp /opt/tally/RULES.md /app/world/RULES.md
 
 WORKDIR /app
