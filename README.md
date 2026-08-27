@@ -36,14 +36,12 @@ A final score cannot answer these questions. Each task must report a curve acros
 
 One trial contains one fixed environment and many ordered Harbor steps. Each step is one job, fight, question, or episode. The environment and workspace persist, so the agent can build knowledge over time. Task authors should keep durable agent notes in `/app` and hidden engine state under `/opt`.
 
-We compare two conditions:
+We compare multiple learnign sytems / harness:
 
 | Condition | Conversation between steps | Files between steps | What it measures |
 |---|---|---|---|
 | Baseline | Fresh | Persist | Learning through file-based memory |
-| Main | Resumed with `--resume-trajectory` | Persist | In-context learning plus file-based memory |
-
-Both conditions must use the same environment, step order, budgets, and feedback policy.
+| In-Context Learning | Resumed with `--resume-trajectory` | Persist | In-context learning plus file-based memory |
 
 ### Feedback domains
 
