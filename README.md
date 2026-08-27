@@ -107,8 +107,7 @@ Only Tally is runnable today. The other folders contain task designs or early co
 | [Warden](tasks/warden/) | Verifiable | Design | A deterministic boss policy |
 | [Courier / Picker](tasks/courier-picker/) | Verifiable | Design | A fixed spatial map |
 | [Expense Desk](tasks/expense-desk/) | Semi-verifiable | Design, blocked by feedback study | An unwritten expense policy |
-| Data Lake | Semi-verifiable, or verifiable with a capped grader | Approved design | A cryptic schema and hidden business ontology |
-| [Corpus](tasks/corpus/) | Non-verifiable | Design | The structure of a fixed document collection |
+| [Corpus](tasks/corpus/) | Non-verifiable | Approved design | A cryptic schema and hidden business ontology |
 | [Codebase Q&A](tasks/codebase-qa/) | Non-verifiable | Early concept | Code hierarchy and dependencies |
 | [Database analytics](tasks/database-analytics/) | Not yet assigned | Early concept | Production database structure |
 | [Web exploration](tasks/web-exploration/) | Non-verifiable | Early concept | Website structure and navigation |
