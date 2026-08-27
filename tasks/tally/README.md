@@ -1,12 +1,12 @@
-# Tally (sample multi-step task)
+# Tally
 
-Harbor multi-step sample: a short color-betting card game.
+Harbor multi-step task: a short color-betting card game.
 
 Each turn is scored on its own (0 or 1). The trial score is the **sum** of twelve turns
 (one bet per card). A new deck is shuffled when the environment starts.
 
 See [`instruction.md`](steps/turn-1/instruction.md) for what the agent reads each turn.
-Past session logs (when using the sample [pi-sessions](../../agents/pi_sessions/) agent)
+Past session logs (when using the [pi-sessions](../../agents/pi_sessions/) agent)
 are under `/app/sessions/`.
 
 ## Rules
@@ -34,7 +34,7 @@ the card and writes `/logs/verifier/reward.txt`.
 ## Layout
 
 ```
-tasks/sample/
+tasks/tally/
 ├── task.toml
 ├── environment/
 │   ├── Dockerfile
@@ -53,13 +53,13 @@ tasks/sample/
 Terminus-2 (default harness):
 
 ```bash
-harbor run -p tasks/sample -a terminus-2 -m openai/gpt-5.6-luna
+harbor run -p tasks/tally -a terminus-2 -m openai/gpt-5.6-luna
 ```
 
-Sample [pi](https://pi.dev/) agent with session export to `/app/sessions/`:
+[pi](https://pi.dev/) agent with session export to `/app/sessions/`:
 
 ```bash
-PYTHONPATH=. harbor run -p tasks/sample \
+PYTHONPATH=. harbor run -p tasks/tally \
   -a agents.pi_sessions:PiSessionsAgent \
   -m openai/gpt-5.6-luna \
   --agent-timeout-multiplier 5

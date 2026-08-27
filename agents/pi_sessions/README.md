@@ -23,7 +23,7 @@ agents/pi_sessions/
 From the repo root:
 
 ```bash
-PYTHONPATH=. harbor run -p tasks/sample \
+PYTHONPATH=. harbor run -p tasks/tally \
   -a agents.pi_sessions:PiSessionsAgent \
   -m openai/gpt-5.6-luna \
   --agent-timeout-multiplier 5
