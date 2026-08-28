@@ -131,7 +131,7 @@ More detail is in [`docs/task-ideas.md`](docs/task-ideas.md).
 
 ## Tasks
 
-Only Tally is runnable today. The other folders contain task designs or early concepts.
+Tally and Database analytics are runnable. The other folders contain task designs or early concepts.
 
 | Task | Domain | Status | Learning object |
 |---|---|---|---|
@@ -141,10 +141,12 @@ Only Tally is runnable today. The other folders contain task designs or early co
 | [Expense Desk](tasks/expense-desk/) | Semi-verifiable | Design, blocked by feedback study | An unwritten expense policy |
 | [Corpus](tasks/corpus/) | Non-verifiable | Approved design | A cryptic schema and hidden business ontology |
 | [Codebase Q&A](tasks/codebase-qa/) | Non-verifiable | Early concept | Code hierarchy and dependencies |
-| [Database analytics](tasks/database-analytics/) | Not yet assigned | Early concept | Production database structure |
+| [Database analytics](tasks/database-analytics/) | Non-verifiable | Runnable | Formula 1 schema and query patterns |
 | [Web exploration](tasks/web-exploration/) | Non-verifiable | Early concept | Website structure and navigation |
 
-Tally proves the Harbor multi-step setup, persistent workspace, per-step rewards, and run reporting. Warden, Courier / Picker, Expense Desk, and Corpus currently document the intended task design but do not yet include runnable environments or verifiers.
+Download the Formula 1 database before you run Database analytics. See [`tasks/database-analytics/README.md`](tasks/database-analytics/README.md).
+
+Tally proves the Harbor multi-step setup, persistent workspace, per-step rewards, and run reporting. Database analytics adds a Reward Kit verifier and baseline vs `--resume-trajectory` runs. Warden, Courier / Picker, Expense Desk, and Corpus currently document the intended task design but do not yet include runnable environments or verifiers.
 
 ## Contributing a task
 
