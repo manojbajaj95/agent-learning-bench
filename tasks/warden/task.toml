@@ -1,0 +1,123 @@
+schema_version = "1.4"
+artifacts = ["/app/fights", "/app/notes.md", "/app/view.txt", "/app/sessions"]
+multi_step_reward_strategy = "mean"
+
+[task]
+name = "agent-learning-bench/warden"
+version = "0.1.0"
+description = "Multi-step hidden-policy duel. Same boss, ten fights."
+keywords = ["warden", "pygame", "multi-step", "opponent-modeling"]
+
+[[task.authors]]
+name = "Manoj Bajaj"
+email = "manoj@example.com"
+
+[metadata]
+difficulty = "hard"
+category = "games"
+tags = ["pygame", "multi-step", "learning", "hidden-policy"]
+
+[agent]
+timeout_sec = 180.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "public"
+build_timeout_sec = 600.0
+cpus = 1
+memory_mb = 2048
+storage_mb = 10240
+gpus = 0
+workdir = "/app"
+
+[[steps]]
+name = "fight-01"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "fight-02"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "fight-03"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "fight-04"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "fight-05"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "fight-06"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "fight-07"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "fight-08"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "fight-09"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "fight-10"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 30.0

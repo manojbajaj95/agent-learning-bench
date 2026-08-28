@@ -138,19 +138,27 @@ Four environments. Four distinct learning objects. All reuse the
 Tally skeleton: generated step dirs, engine under `/opt`, float reward
 per step, verifier-written feedback for the next step.
 
-### 1. Warden — opponent modeling (Domain 1)
+### 1. Warden — hidden boss policy (Domain 1)
 
-Dark-Souls-style turn-based duel. One deterministic boss bot, seeded
-state machine: fixed opening, telegraphed heavy attack one action
-ahead, punishable sweep recovery, punishes repeated player moves.
+One turn-based Pygame duel. One boss. The same fight repeats for 10
+Harbor steps. The policy is a deterministic function of fight state
+and player action. There is no randomness.
 
-- Interface: container CLI (`warden attack|block|dodge left|right|parry|potion`).
-- One Harbor step = one fight. Death ends the step.
-- Reward: `0.7 × boss_hp_removed_fraction + 0.3 × win`.
-- Feedback: live boss responses in-step; post-fight log summary.
-- Curves: death rate falls, win rate rises, actions-to-kill falls.
-- Extension path: phase 2 below 50% HP, additional movesets, second
-  boss sharing some habits. Still one environment, still deterministic.
+Early steps should die. The agent learns the policy from failed combat
+logs, then uses it on the next copy of the same fight. A death is still
+Domain 1: each command returns a true world reaction before the step
+ends. The win is the test. Failures are the data.
+
+- Interface: CLI over a headless Pygame tick (`warden attack|block|dodge|parry|jump|potion`).
+  Local `warden replay` opens a window on the tick log so a human can
+  watch fight 1 vs a later win. `warden play` is for authoring only.
+- One Harbor step = one fight. Death or win ends the step. No in-step reset.
+- Per-step reward: `1` on win, `0` on death. Trial mean = win rate.
+- Headline metrics: Harbor turns to first win; `env_actions` on wins.
+- Three habits, then recovery: Right Cleave, Skyfall, Reaper Sweep,
+  then off balance. Player 2 HP, boss 10 HP. A wrong strike read deals
+  2 (death). `warden attack` is 0 by default; 5 only on recovery after
+  all three defenses. Two recovery attacks win. No grab.
 
 ### 2. Data Lake — D2C schema + hidden ontology (Domain 3)
 
@@ -206,7 +214,7 @@ own coordinates). Two jobs on one simulator:
 
 | Task | Domain | Learning object | Headline curve |
 |---|---|---|---|
-| Warden | 1 | rival behavior model | win rate up; actions-to-kill down |
+| Warden | 1 | hidden boss policy (same fight × 10) | turns to first win down; actions-to-win down |
 | Data Lake | 2 (1 via grader) | schema + hidden ontology | accuracy up; file opens down |
 | Expense Desk | 2 | unwritten policy | decision accuracy up |
 | Courier/Picker | 1 | spatial map | actions-to-done down toward optimum |
@@ -231,7 +239,7 @@ own coordinates). Two jobs on one simulator:
 2. Data Lake (Domain 2 headline claim; blocked until the Domain 2
    study settles the mechanism).
 3. Expense Desk (Domain 2, same blocker as Data Lake).
-4. Warden (Domain 1, richest engine).
+4. Warden (Domain 1; one boss, habit ladder, learn from deaths).
 
 Domain 1 tasks can start now. Domain 2 tasks wait on the study of the
 post-release feedback mechanism: what evidence counts as learning,
