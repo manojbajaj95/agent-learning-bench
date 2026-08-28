@@ -34,14 +34,46 @@ A final score cannot answer these questions. Each task must report a curve acros
 
 ## Task design
 
-One trial contains one fixed environment and many ordered Harbor steps. Each step is one job, fight, question, or episode. The environment and workspace persist, so the agent can build knowledge over time. Task authors should keep durable agent notes in `/app` and hidden engine state under `/opt`.
+One trial contains one fixed environment and many ordered Harbor steps. Each step is one job, fight, question, or episode. The environment and workspace persist across steps in a trial. A new trial starts a new container. Task authors should keep durable agent notes in `/app` and hidden engine state under `/opt`.
 
-We compare multiple learnign sytems / harness:
+## Learning systems
 
-| Condition | Conversation between steps | Files between steps | What it measures |
-|---|---|---|---|
-| Baseline | Fresh | Persist | Learning through file-based memory |
-| In-Context Learning | Resumed with `--resume-trajectory` | Persist | In-context learning plus file-based memory |
+The bench compares three systems. The task, model, and step order stay the same.
+Harbor’s built-in [pi](https://pi.dev/) agent is the baseline harness. The other two systems add one thing on top of that same agent.
+
+The container filesystem still persists in every system (for example `/app/view.txt`). That is the environment, not the learning system.
+
+Needs `OPENAI_API_KEY`. Use the OpenAI id `gpt-5.6-luna` (dot, not hyphen). Pi often needs a higher agent timeout than terminus-2.
+
+### Baseline
+
+Harbor’s built-in `pi`. Fresh chat each turn. No session files. Turn 1 and turn 2 are independent.
+
+```bash
+harbor run -p tasks/tally -a pi -m openai/gpt-5.6-luna \
+  --agent-timeout-multiplier 5
+```
+
+### Pi sessions
+
+Same `pi` agent, plus session copy. [pi-sessions](agents/pi_sessions/) writes each turn’s JSONL to `/app/sessions/`. Later turns can read those files.
+
+```bash
+PYTHONPATH=. harbor run -p tasks/tally \
+  -a agents.pi_sessions:PiSessionsAgent \
+  -m openai/gpt-5.6-luna \
+  --agent-timeout-multiplier 5
+```
+
+### In-context learning
+
+Same `pi` agent as baseline. `--resume-trajectory` continues the chat across turns. Harbor sets this on agents that declare `SUPPORTS_RESUME` (pi does). Earlier turns stay in the model context.
+
+```bash
+harbor run -p tasks/tally -a pi -m openai/gpt-5.6-luna \
+  --resume-trajectory \
+  --agent-timeout-multiplier 5
+```
 
 ### Feedback domains
 
@@ -91,7 +123,7 @@ Each task also needs these controls:
 | Holdout tail | Copying corrected answers |
 | Cost curve | Brute-force exploration hidden by a correct final answer |
 | Fixed environment per trial | Changes in the world being mistaken for learning |
-| Fresh baseline condition | Filesystem memory being mistaken for in-context learning |
+| Fresh baseline condition | Session files or resumed chat being mistaken for no learning |
 
 A good task has one clear learning object, a measurable improvement curve, enough steps to show a trend, and a holdout that tests transfer. It should not install the solution, reveal hidden state, or use a final aggregate score as its only result.
 
@@ -122,7 +154,7 @@ Build tasks in [Harbor](https://www.harborframework.com/docs) format and submit 
 - the stable object that the agent must learn;
 - the expected learning curve;
 - the per-step reward and cost metric;
-- the baseline and main run conditions; and
+- the baseline, pi-sessions, and in-context run commands; and
 - the holdout or other control that rules out shortcuts.
 
 Do not build a semi-verifiable task until its feedback policy can show generalization instead of answer replay.

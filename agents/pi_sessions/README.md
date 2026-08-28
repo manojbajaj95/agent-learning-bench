@@ -31,6 +31,8 @@ PYTHONPATH=. harbor run -p tasks/tally \
 
 Needs `OPENAI_API_KEY`. Raise the agent timeout multiplier if turns time out (pi is slower than terminus-2).
 
+Baseline is Harbor `pi` with no wrapper. In-context is the same `pi` plus `--resume-trajectory`.
+
 ## Behavior
 
 1. Installs pi (same as Harbor `pi`).

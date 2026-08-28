@@ -50,13 +50,21 @@ tasks/tally/
 
 ## Running
 
-Terminus-2 (default harness):
+Same model. Baseline is Harbor `pi`. Pi sessions adds session copy. In-context adds `--resume-trajectory`.
+Needs `OPENAI_API_KEY`. Use the OpenAI id `gpt-5.6-luna` (dot, not hyphen).
+
+### Baseline
+
+Harbor `pi`. Fresh chat. No session files.
 
 ```bash
-harbor run -p tasks/tally -a terminus-2 -m openai/gpt-5.6-luna
+harbor run -p tasks/tally -a pi -m openai/gpt-5.6-luna \
+  --agent-timeout-multiplier 5
 ```
 
-[pi](https://pi.dev/) agent with session export to `/app/sessions/`:
+### Pi sessions
+
+Same `pi`, plus session JSONL copied to `/app/sessions/`.
 
 ```bash
 PYTHONPATH=. harbor run -p tasks/tally \
@@ -65,9 +73,17 @@ PYTHONPATH=. harbor run -p tasks/tally \
   --agent-timeout-multiplier 5
 ```
 
-Needs `OPENAI_API_KEY`. Use the OpenAI id `gpt-5.6-luna` (dot, not hyphen).
-Do not pass `--resume-trajectory` if you want a fresh chat each turn.
-Pi often needs a higher agent timeout than terminus-2; use `--agent-timeout-multiplier` if turns time out.
+### In-context learning
+
+Same `pi` as baseline, with `--resume-trajectory`.
+
+```bash
+harbor run -p tasks/tally -a pi -m openai/gpt-5.6-luna \
+  --resume-trajectory \
+  --agent-timeout-multiplier 5
+```
+
+Pi often needs a higher agent timeout than terminus-2. Use `--agent-timeout-multiplier` if turns time out.
 
 ## Reporting
 
@@ -80,7 +96,9 @@ duration, and tokens.
 
 ## Note on learning
 
-Harbor keeps the container filesystem across steps in a trial, but starts a new agent
-conversation each step by default. Across trials the container is new (new shuffle, empty
-`/app/sessions/`). The [pi-sessions](../../agents/pi_sessions/) agent copies each turn’s
-session JSONL into `/app/sessions/` on shutdown so later turns can read prior runs.
+Harbor keeps the container filesystem across steps in a trial. Across trials the
+container is new (new shuffle, empty `/app/sessions/`).
+
+- **Baseline:** Harbor `pi`; fresh chat; `/app/sessions/` stays empty.
+- **Pi sessions:** same `pi`, plus session JSONL copied into `/app/sessions/` on shutdown.
+- **In-context:** Harbor `pi` with `--resume-trajectory`; same chat across turns.
