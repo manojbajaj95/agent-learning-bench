@@ -131,7 +131,7 @@ More detail is in [`docs/task-ideas.md`](docs/task-ideas.md).
 
 ## Tasks
 
-Tally and Database analytics are runnable. Warden v1 runs, but the
+Tally, Database analytics, and Codebase Q&A are runnable. Warden v1 runs, but the
 task is still **in progress**. The other folders contain task designs
 or early concepts.
 
@@ -142,13 +142,13 @@ or early concepts.
 | [Courier / Picker](tasks/courier-picker/) | Verifiable | Design | A fixed spatial map |
 | [Expense Desk](tasks/expense-desk/) | Semi-verifiable | Design, blocked by feedback study | An unwritten expense policy |
 | [Corpus](tasks/corpus/) | Non-verifiable | Approved design | A cryptic schema and hidden business ontology |
-| [Codebase Q&A](tasks/codebase-qa/) | Non-verifiable | Early concept | Code hierarchy and dependencies |
+| [Codebase Q&A](tasks/codebase-qa/) | Non-verifiable | Runnable | Flask hierarchy and call patterns |
 | [Database analytics](tasks/database-analytics/) | Non-verifiable | Runnable | Formula 1 schema and query patterns |
 | [Web exploration](tasks/web-exploration/) | Non-verifiable | Early concept | Website structure and navigation |
 
-Download the Formula 1 database before you run Database analytics. See [`tasks/database-analytics/README.md`](tasks/database-analytics/README.md).
+Download the Formula 1 database before you run Database analytics. See [`tasks/database-analytics/README.md`](tasks/database-analytics/README.md). Download Flask before you run Codebase Q&A. See [`tasks/codebase-qa/README.md`](tasks/codebase-qa/README.md).
 
-Tally proves the Harbor multi-step setup, persistent workspace, per-step rewards, and run reporting. Warden v1 is a looping hidden-policy fight with live CLI feedback and a Pygame replay. It is in progress: the current boss is too easy to read, so later work must make the same fight harder. Database analytics adds a Reward Kit verifier and baseline vs `--resume-trajectory` runs. Courier / Picker, Expense Desk, and Corpus currently document the intended task design but do not yet include runnable environments or verifiers.
+Tally proves the Harbor multi-step setup, persistent workspace, per-step rewards, and run reporting. Warden v1 is a looping hidden-policy fight with live CLI feedback and a Pygame replay. It is in progress: the current boss is too easy to read, so later work must make the same fight harder. Database analytics and Codebase Q&A add a Reward Kit verifier and baseline vs `--resume-trajectory` runs. Courier / Picker, Expense Desk, and Corpus currently document the intended task design but do not yet include runnable environments or verifiers.
 
 ## Contributing a task
 

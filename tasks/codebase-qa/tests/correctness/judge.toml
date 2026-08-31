@@ -1,0 +1,9 @@
+[judge]
+judge = "openai/gpt-5.6-luna"
+files = ["/app/question.md", "/app/answer.json", "/opt/qa/reference.md"]
+timeout = 120
+
+[[criterion]]
+description = "Does the agent's answer agree with the gold reference on the facts that matter (files, symbols, and behavior)? Paraphrase is allowed. Score low if the answer is missing, contradicts the gold, or invents files or symbols the gold does not support."
+type = "likert"
+points = 5
