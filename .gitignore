@@ -16,5 +16,9 @@ tasks/corpus/data/
 tasks/corpus/environment/data/
 tasks/corpus/steps/
 tasks/corpus/task.toml
+tasks/web-exploration/environment/data/
+tasks/web-exploration/environment/web/state/
+tasks/web-exploration/steps/
+tasks/web-exploration/task.toml
 
 docs/*

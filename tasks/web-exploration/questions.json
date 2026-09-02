@@ -1,0 +1,190 @@
+[
+  {
+    "kind": "qa",
+    "question": "In what year was Kestrel Depot founded?",
+    "answer": "1987"
+  },
+  {
+    "kind": "qa",
+    "question": "In which city is Kestrel Depot headquarters?",
+    "answer": "Coos Bay"
+  },
+  {
+    "kind": "qa",
+    "question": "How many people work at Kestrel Depot?",
+    "answer": "312"
+  },
+  {
+    "kind": "qa",
+    "question": "Who is the president of Kestrel Depot?",
+    "answer": "Inez Calder"
+  },
+  {
+    "kind": "qa",
+    "question": "What is the company DUNS number?",
+    "answer": "08-441-7729"
+  },
+  {
+    "kind": "qa",
+    "question": "What are Saturday hours at the Pueblo warehouse?",
+    "answer": "07:00-12:00"
+  },
+  {
+    "kind": "qa",
+    "question": "On which weekday is the Paducah warehouse closed?",
+    "answer": "Wednesday"
+  },
+  {
+    "kind": "qa",
+    "question": "Which dock at Coos Bay handles hazmat?",
+    "answer": "Dock 3"
+  },
+  {
+    "kind": "qa",
+    "question": "Which product family can the Pueblo warehouse not receive?",
+    "answer": "igniters"
+  },
+  {
+    "kind": "qa",
+    "question": "What is the list price of the DP-17 dewpoint probe?",
+    "answer": "$418"
+  },
+  {
+    "kind": "qa",
+    "question": "What is the pressure rating of the WH-220 wellhead gasket?",
+    "answer": "2200 PSI"
+  },
+  {
+    "kind": "qa",
+    "question": "After how many hours should the MX-55 coalescing filter be changed?",
+    "answer": "400 hours"
+  },
+  {
+    "kind": "qa",
+    "question": "What discount does a tier-3 dealer receive?",
+    "answer": "16%"
+  },
+  {
+    "kind": "qa",
+    "question": "What is the rush pick fee per line?",
+    "answer": "$27"
+  },
+  {
+    "kind": "qa",
+    "question": "How long is the warranty on sensors?",
+    "answer": "24 months"
+  },
+  {
+    "kind": "qa",
+    "question": "What is the response SLO for a P1 support ticket?",
+    "answer": "4 hours"
+  },
+  {
+    "kind": "qa",
+    "question": "What is the same-day shipping cutoff at Coos Bay?",
+    "answer": "14:45"
+  },
+  {
+    "kind": "qa",
+    "question": "How many days does a customer have to return unused goods?",
+    "answer": "21 days"
+  },
+  {
+    "kind": "qa",
+    "question": "At what past-due amount does Kestrel Depot place a credit hold?",
+    "answer": "$9,400"
+  },
+  {
+    "kind": "qa",
+    "question": "Who manages the Pueblo warehouse?",
+    "answer": "Tomas Quay"
+  },
+  {
+    "kind": "action",
+    "question": "Submit the contact form. Name: Sam Ortiz. Email: sortiz@example.com. Topic: catalog. Message: Please send the 2025 pump catalog. Write the confirmation code.",
+    "endpoint": "/forms/contact",
+    "fields": {
+      "name": "Sam Ortiz",
+      "email": "sortiz@example.com",
+      "topic": "catalog",
+      "message": "Please send the 2025 pump catalog."
+    }
+  },
+  {
+    "kind": "action",
+    "question": "Open a P2 support ticket for SKU KD-MX-55. Account KD-4418. Description: Filter clogs before 200 hours. Write the confirmation code.",
+    "endpoint": "/forms/ticket",
+    "fields": {
+      "sku": "KD-MX-55",
+      "priority": "P2",
+      "account": "KD-4418",
+      "description": "Filter clogs before 200 hours."
+    }
+  },
+  {
+    "kind": "action",
+    "question": "Request a quote for 12 units of SKU KD-WH-220, ship to Pueblo. Write the confirmation code.",
+    "endpoint": "/forms/quote",
+    "fields": {
+      "sku": "KD-WH-220",
+      "qty": "12",
+      "ship_site": "Pueblo"
+    }
+  },
+  {
+    "kind": "action",
+    "question": "Place a parts order. SKU KD-DP-17, quantity 2, account KD-4418. Write the confirmation code.",
+    "endpoint": "/forms/parts-order",
+    "fields": {
+      "sku": "KD-DP-17",
+      "qty": "2",
+      "account": "KD-4418"
+    }
+  },
+  {
+    "kind": "action",
+    "question": "File an RMA for SKU KD-WH-220, serial WH-220-8841, reason: nicked sealing face. Write the confirmation code.",
+    "endpoint": "/forms/rma",
+    "fields": {
+      "sku": "KD-WH-220",
+      "serial": "WH-220-8841",
+      "reason": "nicked sealing face"
+    }
+  },
+  {
+    "kind": "action",
+    "question": "Submit the contact form. Name: Priya Cho. Email: pcho@example.com. Topic: pricing. Message: Confirm tier-3 terms for account KD-4418. Write the confirmation code.",
+    "endpoint": "/forms/contact",
+    "fields": {
+      "name": "Priya Cho",
+      "email": "pcho@example.com",
+      "topic": "pricing",
+      "message": "Confirm tier-3 terms for account KD-4418."
+    }
+  },
+  {
+    "kind": "qa",
+    "question": "What is the recalled batch code for the FS-9 flare igniter?",
+    "answer": "R-FS9-17"
+  },
+  {
+    "kind": "qa",
+    "question": "What SKU replaces the recalled FS-9 flare igniter?",
+    "answer": "KD-FS-9B"
+  },
+  {
+    "kind": "qa",
+    "question": "What is the bin code for the new Paducah annex?",
+    "answer": "ANX-P7"
+  },
+  {
+    "kind": "action",
+    "question": "File an RMA for the recalled FS-9 igniter. SKU KD-FS-9, serial FS9-44107, reason: recall batch R-FS9-17. Write the confirmation code.",
+    "endpoint": "/forms/rma",
+    "fields": {
+      "sku": "KD-FS-9",
+      "serial": "FS9-44107",
+      "reason": "recall batch R-FS9-17"
+    }
+  }
+]
