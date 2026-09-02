@@ -12,3 +12,9 @@ tasks/codebase-qa/data/
 tasks/codebase-qa/environment/data/
 tasks/codebase-qa/steps/
 tasks/codebase-qa/task.toml
+tasks/corpus/data/
+tasks/corpus/environment/data/
+tasks/corpus/steps/
+tasks/corpus/task.toml
+
+docs/*
