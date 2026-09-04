@@ -140,6 +140,7 @@ or early concepts.
 | [Tally](tasks/tally/) | Verifiable | Runnable sample | Card counts across twelve turns |
 | [Warden](tasks/warden/) | Verifiable | In progress | A hidden boss policy, learned from repeated deaths |
 | [Courier / Picker](tasks/courier-picker/) | Verifiable | Design | A fixed spatial map |
+| [Affinity Arena](tasks/affinity-arena/) | Verifiable | Design | A hidden affinity chart, learned from damage numbers |
 | [Expense Desk](tasks/expense-desk/) | Semi-verifiable | Design, blocked by feedback study | An unwritten expense policy |
 | [Corpus](tasks/corpus/) | Non-verifiable | Approved design | A cryptic schema and hidden business ontology |
 | [Codebase Q&A](tasks/codebase-qa/) | Non-verifiable | Runnable | Flask hierarchy and call patterns |
