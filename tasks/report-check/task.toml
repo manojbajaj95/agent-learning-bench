@@ -1,0 +1,268 @@
+schema_version = "1.4"
+artifacts = ["/app/report.md", "/app/brief.md", "/app/notes.md", "/app/desk", "/app/sessions"]
+multi_step_reward_strategy = "mean"
+
+[task]
+name = "agent-learning-bench/report-check"
+version = "0.1.0"
+description = "Multi-step report writing against an unpublished house style"
+keywords = ["writing", "hidden-rules", "multi-step", "continual-learning"]
+
+[[task.authors]]
+name = "Manoj Bajaj"
+email = "manoj@example.com"
+
+[metadata]
+difficulty = "hard"
+category = "writing"
+tags = ["hidden-rules", "multi-step", "learning", "holdout"]
+
+[agent]
+timeout_sec = 300.0
+user = "agent"
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "public"
+build_timeout_sec = 600.0
+cpus = 1
+memory_mb = 2048
+storage_mb = 10240
+gpus = 0
+workdir = "/app"
+
+[[steps]]
+name = "job-01"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-02"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-03"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-04"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-05"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-06"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-07"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-08"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-09"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-10"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-11"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-12"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-13"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-14"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-15"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-16"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-17"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-18"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-19"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-20"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-21"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-22"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-23"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-24"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-25"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
+
+[[steps]]
+name = "job-26"
+
+[steps.agent]
+timeout_sec = 300.0
+
+[steps.verifier]
+timeout_sec = 30.0
