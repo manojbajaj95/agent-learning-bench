@@ -115,6 +115,7 @@ def main() -> int:
 
     state = ROOT / ".test-state"
     state.mkdir(exist_ok=True)
+    engine.STATE_DIR = state
     engine.STATE_PATH = state / "current.json"
     if engine.STATE_PATH.exists():
         engine.STATE_PATH.unlink()
