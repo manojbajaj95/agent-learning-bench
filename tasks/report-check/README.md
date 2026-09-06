@@ -12,9 +12,9 @@ The learning object is **the house style guide**. The measurement is
 **submissions needed before a report is accepted**, which should fall toward one
 while acceptance stays high.
 
-See [`instruction.md`](instruction.md) for what the agent reads each step. It is
-the same text on all twenty-six steps: no step says which job it is, how hard it
-is, or which rules apply.
+See [`instruction.md`](instruction.md) for the fixed per-step instructions. They are
+the same text on all twenty-six steps: the instruction does not say which job it is,
+how hard it is, or which rules apply.
 
 ## Feedback domain
 
