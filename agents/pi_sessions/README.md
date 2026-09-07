@@ -31,7 +31,14 @@ PYTHONPATH=. harbor run -p tasks/tally \
 
 Needs `OPENAI_API_KEY`. Raise the agent timeout multiplier if turns time out (pi is slower than terminus-2).
 
-Baseline is Harbor `pi` with no wrapper. In-context is the same `pi` plus `--resume-trajectory`.
+The wrapper inherits Harbor Pi's model connection and execution logic. With
+Harbor 0.22 and a custom `OPENAI_BASE_URL`, also pass
+`--ak model_api=openai-responses` for a Responses-compatible endpoint.
+
+Affinity Arena uses `agents.pi_trajectory:PiTrajectoryAgent` for its baseline
+and adds `--resume-trajectory` for in-context runs. That thin wrapper keeps
+Harbor Pi's execution unchanged and exports viewer-compatible trajectories.
+Pi sessions inherits the same export, so all three conditions have viewable logs.
 
 ## Behavior
 
