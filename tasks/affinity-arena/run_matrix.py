@@ -62,9 +62,9 @@ def commands(
     result = []
     for condition, agent in (
         ("oracle", "oracle"),
-        ("baseline", "agents.pi_trajectory:PiTrajectoryAgent"),
-        ("sessions", "agents.pi_sessions:PiSessionsAgent"),
-        ("icl", "agents.pi_trajectory:PiTrajectoryAgent"),
+        ("baseline", "affinity_agent:PiTrajectoryAgent"),
+        ("sessions", "affinity_agent:PiSessionsAgent"),
+        ("icl", "affinity_agent:PiTrajectoryAgent"),
     ):
         command = [*common, "--job-name", f"{prefix}-{condition}", "-a", agent]
         if condition != "oracle":
@@ -142,7 +142,7 @@ def main() -> None:
         parser.error("a target job already exists; choose a new --prefix to preserve previous runs")
     digest = task_digest(args.task)
     env = dict(os.environ)
-    env["PYTHONPATH"] = str(REPO) + (
+    env["PYTHONPATH"] = str(TASK) + (
         os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else ""
     )
     trials = []

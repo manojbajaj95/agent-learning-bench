@@ -6,12 +6,12 @@ import sys
 from pathlib import Path
 
 import pytest
-from agents.pi_sessions import PiSessionsAgent
-from agents.pi_trajectory import PiTrajectoryAgent
-from agents.pi_trajectory.convert import convert_events, export_trajectory
 from harbor.agents.installed.pi import Pi
 from harbor.models.agent.context import AgentContext
 from harbor.models.trajectories.trajectory import Trajectory
+
+from affinity_agent import PiSessionsAgent, PiTrajectoryAgent
+from affinity_agent.convert import convert_events, export_trajectory
 
 
 def message(role, content, **kwargs):
@@ -149,13 +149,13 @@ def test_pending_call_remains_visible_on_interruption(tmp_path):
 
 
 def test_backfill_cli_finds_step_logs(log):
-    root = Path(__file__).resolve().parents[3]
+    task = Path(__file__).resolve().parents[1]
     destination = log.parent / "job/trial/steps/battle-01/agent"
     destination.mkdir(parents=True)
     (destination / "pi.txt").write_bytes(log.read_bytes())
     command = [
         sys.executable,
-        str(root / "tools/convert_pi_trajectories.py"),
+        str(task / "convert_pi_trajectories.py"),
         str(log.parent / "job"),
     ]
     first = subprocess.run(command, capture_output=True, text=True, timeout=30)

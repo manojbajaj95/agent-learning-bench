@@ -1,16 +1,17 @@
 import json
+import os
 import shlex
 import subprocess
 import sys
 from pathlib import Path
 
-from agents.pi_sessions import PiSessionsAgent
 from harbor.agents.installed.pi import Pi
 from harbor.agents.model_connection import ModelConnectionSpec, resolve_model_connection
 from harbor.models.task.task import Task
-from tools.report_runs import summarize_trial
+from tools.report_runs import summarize_trial as summarize_harbor_trial
 
-from analyze import analyze_job, report
+from affinity_agent import PiSessionsAgent
+from analyze import analyze_job, report, summarize_trial
 from generate_steps import generated_files, write_generated
 from run_matrix import commands
 
@@ -60,6 +61,10 @@ def test_reports_keep_metrics_and_mark_wins(tmp_path):
     summary = summarize_trial(data)
     assert summary["mean_reward"] == 0.75
     assert summary["steps"][0]["hit"] is True
+    # Arena's win flag must not redefine success for existing benchmark tasks.
+    shared = summarize_harbor_trial(data)
+    assert shared["steps"][0]["hit"] is False
+    assert "rewards" not in shared["steps"][0]
     rows = analyze_job(tmp_path)
     assert not rows[0]["issues"]
     assert rows[0]["phases"]["holdout"]["reward"] == 0.75
@@ -112,6 +117,40 @@ def test_matrix_commands_are_matched_and_keyless(tmp_path):
         if condition != "oracle":
             assert "model_api=openai-responses" in command
             assert command[command.index("-m") + 1] == "openai/model"
+            assert command[command.index("-a") + 1].startswith("affinity_agent:")
+
+
+def test_task_local_agents_load_without_modifying_shared_agents(tmp_path):
+    script = """
+from pathlib import Path
+from harbor.agents.factory import AgentFactory
+from harbor.agents.installed.pi import Pi
+from agents.pi_sessions import PiSessionsAgent as SharedSessions
+
+before = (Pi.run, Pi.populate_context_post_run, SharedSessions.run,
+          SharedSessions.populate_context_post_run)
+for name in ('PiTrajectoryAgent', 'PiSessionsAgent'):
+    agent = AgentFactory.create_agent_from_import_path(
+        'affinity_agent:' + name, logs_dir=Path('.'),
+        model_name='google/test-model', version='0.85.1')
+    assert type(agent).__module__.startswith('affinity_agent.')
+    assert type(agent).run is Pi.run
+assert before == (Pi.run, Pi.populate_context_post_run, SharedSessions.run,
+                  SharedSessions.populate_context_post_run)
+from affinity_agent.sessions import _EXTENSION_HOST_PATH
+assert _EXTENSION_HOST_PATH.is_file()
+assert 'affinity-arena' in _EXTENSION_HOST_PATH.parts
+"""
+    env = dict(os.environ, PYTHONPATH=os.pathsep.join((str(TASK), str(TASK.parents[1]))))
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def test_human_play_oracle_script():

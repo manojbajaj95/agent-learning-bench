@@ -143,7 +143,7 @@ offline memoryless policy.
 ```bash
 .venv/bin/pytest tasks/affinity-arena/checks -m 'not docker' -q
 .venv/bin/pytest tasks/affinity-arena/checks -m docker -q
-.venv/bin/ruff check tasks/affinity-arena agents/pi_sessions/agent.py
+.venv/bin/ruff check tasks/affinity-arena
 python3 tasks/affinity-arena/generate_steps.py --check
 python3 tasks/affinity-arena/calibrate.py --check \
   --out-dir tasks/affinity-arena/results/calibration-v2
@@ -237,8 +237,8 @@ echo
 Run a fresh 20-battle trial with conversation history and notes preserved:
 
 ```bash
-PYTHONPATH=. .venv/bin/harbor run -p tasks/affinity-arena \
-  -a agents.pi_trajectory:PiTrajectoryAgent \
+PYTHONPATH=tasks/affinity-arena .venv/bin/harbor run -p tasks/affinity-arena \
+  -a affinity_agent:PiTrajectoryAgent \
   -m google/gemini-3.5-flash --ak version=0.85.1 \
   --resume-trajectory --agent-timeout-multiplier 5 \
   --job-name arena-gemini-1 --jobs-dir jobs -n 1 --max-retries 0
@@ -249,6 +249,9 @@ traces, run `.venv/bin/harbor view jobs --port 8080` in another terminal and ope
 <http://localhost:8080>. Select the job, trial, and battle. The wrapper exports
 each battle's trajectory after the agent finishes that battle; it does not
 stream individual tokens. Pi's execution and conversation resume are unchanged.
+The adapters live in this task's `affinity_agent/` package; shared agents and
+other tasks are unchanged. Plain Harbor `-a pi` also works, but requires the
+offline conversion command below to view trajectories.
 Version 0.2.1 fixes log permissions between resumed battles; rerun older failed
 trials under a new job name rather than using their scores as learning results.
 After the trial, generate the learning report:
@@ -271,7 +274,7 @@ Older runs made with `-a pi` have native logs but no viewer trajectory. Convert
 a finished run once, then refresh the viewer (no rerun or API key needed):
 
 ```bash
-.venv/bin/python tools/convert_pi_trajectories.py jobs/gemini35-icl-seed1-fixed \
+.venv/bin/python tasks/affinity-arena/convert_pi_trajectories.py jobs/gemini35-icl-seed1-fixed \
   --pi-version 0.85.1
 ```
 

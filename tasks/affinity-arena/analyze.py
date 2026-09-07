@@ -11,7 +11,18 @@ from statistics import mean
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT.parents[1]))
-from tools.report_runs import summarize_trial
+from tools.report_runs import summarize_trial as summarize_harbor_trial
+
+
+def summarize_trial(result: dict) -> dict:
+    """Add Arena diagnostics without changing the shared report's score semantics."""
+    summary = summarize_harbor_trial(result)
+    for step, raw in zip(summary["steps"], result.get("step_results") or [], strict=True):
+        rewards = (raw.get("verifier_result") or {}).get("rewards") or {}
+        step["rewards"] = rewards
+        if "won" in rewards:
+            step["hit"] = rewards["won"] == 1
+    return summary
 
 METRICS = (
     "reward",

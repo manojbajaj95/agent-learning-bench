@@ -80,10 +80,6 @@ def summarize_trial(result: dict[str, Any]) -> dict[str, Any]:
         if reward is not None:
             step_rewards.append(reward)
         metrics = _agent_metrics(step.get("agent_result"))
-        rewards = (step.get("verifier_result") or {}).get("rewards") or {}
-        hit = None if reward is None else reward >= 1.0
-        if "won" in rewards:
-            hit = rewards["won"] == 1
         timing = step.get("agent_execution") or {}
         duration = _duration_sec(timing.get("started_at"), timing.get("finished_at"))
         costs.append(metrics["cost_usd"])
@@ -94,8 +90,7 @@ def summarize_trial(result: dict[str, Any]) -> dict[str, Any]:
             {
                 "name": name,
                 "points": reward,
-                "hit": hit,
-                "rewards": rewards,
+                "hit": None if reward is None else reward >= 1.0,
                 "cost_usd": metrics["cost_usd"],
                 "duration_sec": duration,
                 "n_input_tokens": metrics["n_input_tokens"],
