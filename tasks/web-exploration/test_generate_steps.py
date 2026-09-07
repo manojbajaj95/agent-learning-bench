@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from generate_steps import load_shopping_tasks
+from generate_steps import ROOT, generate, load_shopping_tasks
 
 
 class GeneratorTests(unittest.TestCase):
@@ -39,6 +39,39 @@ class GeneratorTests(unittest.TestCase):
         ]
         with self.assertRaisesRegex(ValueError, "duplicate task_id 2"):
             load_shopping_tasks(self.write_json(rows))
+
+    def test_generate_writes_under_provided_root(self) -> None:
+        repo_steps = ROOT / "steps"
+        repo_step_names = (
+            {path.name for path in repo_steps.iterdir() if path.is_dir()}
+            if repo_steps.is_dir()
+            else set()
+        )
+
+        alt_root = Path(self.temp_dir.name) / "alt"
+        alt_root.mkdir()
+        rows = [
+            {
+                "task_id": 21,
+                "intent_template_id": 222,
+                "sites": ["shopping"],
+                "intent": "Find reviewers",
+                "start_urls": ["__SHOPPING__/example.html"],
+                "eval": [],
+            },
+        ]
+        generate(rows, alt_root, limit=None)
+
+        self.assertTrue((alt_root / "steps" / "task-0021").is_dir())
+        self.assertTrue((alt_root / "data" / "agent-input.json").is_file())
+        self.assertTrue((alt_root / "task.toml").is_file())
+        if repo_steps.is_dir():
+            self.assertEqual(
+                repo_step_names,
+                {path.name for path in repo_steps.iterdir() if path.is_dir()},
+            )
+        else:
+            self.assertFalse(repo_steps.exists())
 
 
 if __name__ == "__main__":

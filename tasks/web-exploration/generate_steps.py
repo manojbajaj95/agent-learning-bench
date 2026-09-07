@@ -17,7 +17,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT / "data"
 DATASET = DATA / "webarena-verified.json"
-STEPS = ROOT / "steps"
 INSTRUCTION = (ROOT / "instruction.md").read_text()
 TASK_TOML_HEAD = """\
 schema_version = "1.4"
@@ -81,10 +80,10 @@ def agent_input(task: dict) -> dict:
     }
 
 
-def write_step(task: dict) -> str:
+def write_step(task: dict, steps_dir: Path) -> str:
     task_id = int(task["task_id"])
     name = f"task-{task_id:04d}"
-    step = STEPS / name
+    step = steps_dir / name
     if step.exists():
         shutil.rmtree(step)
     (step / "workdir").mkdir(parents=True)
@@ -116,7 +115,7 @@ def generate(tasks: list[dict], root: Path, limit: int | None) -> None:
 
     parts = [TASK_TOML_HEAD]
     for task in chosen:
-        name = write_step(task)
+        name = write_step(task, steps_dir)
         parts.append(
             textwrap.dedent(
                 f"""
