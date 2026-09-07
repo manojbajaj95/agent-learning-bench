@@ -50,6 +50,8 @@ class GeneratorTests(unittest.TestCase):
 
         alt_root = Path(self.temp_dir.name) / "alt"
         alt_root.mkdir()
+        (alt_root / "data").mkdir()
+        (alt_root / "data" / "auth.json").write_text('{"cookies": []}\n')
         rows = [
             {
                 "task_id": 21,
@@ -72,6 +74,21 @@ class GeneratorTests(unittest.TestCase):
             (step / "tests" / "test.sh").read_text(),
         )
         self.assertTrue((alt_root / "data" / "agent-input.json").is_file())
+        self.assertTrue(
+            (alt_root / "environment" / "data" / "agent-input.json").is_file()
+        )
+        self.assertTrue((alt_root / "environment" / "data" / "auth.json").is_file())
+        self.assertEqual(
+            rows,
+            json.loads(
+                (
+                    alt_root
+                    / "environment"
+                    / "data"
+                    / "webarena-verified.json"
+                ).read_text()
+            ),
+        )
         self.assertTrue((alt_root / "task.toml").is_file())
         if repo_steps.is_dir():
             self.assertEqual(
@@ -80,6 +97,36 @@ class GeneratorTests(unittest.TestCase):
             )
         else:
             self.assertFalse(repo_steps.exists())
+
+    def test_dockerfile_pins_external_tools(self) -> None:
+        text = (ROOT / "environment" / "Dockerfile").read_text()
+        self.assertIn("agent-browser@0.36.0", text)
+        self.assertIn("webarena-verified==1.2.3", text)
+        self.assertIn("/app/.pi/skills/agent-browser", text)
+        self.assertIn("COPY webarena/runtime.py /opt/webarena/runtime.py", text)
+        self.assertIn("COPY data/ /opt/webarena/", text)
+        self.assertNotIn("COPY web/", text)
+        self.assertNotIn("/opt/web/", text)
+
+    def test_generate_removes_stale_staged_auth(self) -> None:
+        root = Path(self.temp_dir.name) / "stale-auth"
+        staged_auth = root / "environment" / "data" / "auth.json"
+        staged_auth.parent.mkdir(parents=True)
+        staged_auth.write_text('{"stale": true}\n')
+        rows = [
+            {
+                "task_id": 21,
+                "intent_template_id": 222,
+                "sites": ["shopping"],
+                "intent": "Find item",
+                "start_urls": ["__SHOPPING__"],
+                "eval": [],
+            }
+        ]
+
+        generate(rows, root, limit=None)
+
+        self.assertFalse(staged_auth.exists())
 
 
 if __name__ == "__main__":

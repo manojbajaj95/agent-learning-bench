@@ -19,11 +19,14 @@ class RuntimeTests(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp_dir.cleanup)
         root = Path(self.temp_dir.name)
+        auth_state = root / "auth.json"
+        auth_state.write_text("{}")
         self.paths = mock.patch.multiple(
             runtime,
             APP=root / "app",
             TASK_PATH=root / "app" / "task.json",
             RESPONSE_PATH=root / "app" / "agent_response.json",
+            AUTH_STATE=str(auth_state),
             HAR_PATH=root / "logs" / "agent" / "network.har",
             TRAJECTORY_PATH=root / "logs" / "agent" / "trajectory.json",
             REWARD_PATH=root / "logs" / "verifier" / "reward.json",
@@ -57,6 +60,11 @@ class RuntimeTests(unittest.TestCase):
             ],
             browser.call_args_list,
         )
+
+    def test_prepare_requires_auth_state(self):
+        Path(runtime.AUTH_STATE).unlink()
+        with self.assertRaisesRegex(RuntimeError, "auth state is missing"):
+            runtime.prepare(21, task={"task_id": 21})
 
     def test_browser_invokes_agent_browser_directly(self):
         completed = subprocess.CompletedProcess([], 0, "{}", "")

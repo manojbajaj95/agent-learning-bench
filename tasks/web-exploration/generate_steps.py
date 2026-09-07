@@ -110,6 +110,19 @@ def generate(tasks: list[dict], root: Path, limit: int | None) -> None:
     data_dir.mkdir(parents=True, exist_ok=True)
     agent_rows = [agent_input(task) for task in chosen]
     (data_dir / "agent-input.json").write_text(json.dumps(agent_rows, indent=2) + "\n")
+    environment_data = root / "environment" / "data"
+    environment_data.mkdir(parents=True, exist_ok=True)
+    (environment_data / "agent-input.json").write_text(
+        json.dumps(agent_rows, indent=2) + "\n"
+    )
+    (environment_data / "webarena-verified.json").write_text(
+        json.dumps(tasks, indent=2) + "\n"
+    )
+    auth = data_dir / "auth.json"
+    if auth.is_file():
+        shutil.copy2(auth, environment_data / "auth.json")
+    else:
+        (environment_data / "auth.json").unlink(missing_ok=True)
 
     steps_dir = root / "steps"
     if steps_dir.exists():

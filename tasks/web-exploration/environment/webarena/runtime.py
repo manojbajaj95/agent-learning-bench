@@ -81,6 +81,8 @@ def load_task(task_id: int) -> dict:
 
 
 def prepare(task_id: int, task: dict | None = None) -> None:
+    if not Path(AUTH_STATE).is_file():
+        raise RuntimeError(f"auth state is missing: {AUTH_STATE}")
     task = task or load_task(task_id)
     reset_site()
     APP.mkdir(parents=True, exist_ok=True)
