@@ -41,9 +41,11 @@ git clone https://github.com/web-arena-x/webarena.git /tmp/webarena
 git -C /tmp/webarena checkout dce04686a56253aefba7b18a4fa0937cf1dc987b
 python3 -m pip install -r /tmp/webarena/requirements.txt
 python3 -m playwright install chromium
+mkdir -p tasks/web-exploration/data
 SHOPPING=http://localhost:7770 \
 SHOPPING_ADMIN=unused REDDIT=unused GITLAB=unused \
 WIKIPEDIA=unused MAP=unused HOMEPAGE=unused \
+PYTHONPATH=/tmp/webarena \
 python3 /tmp/webarena/browser_env/auto_login.py \
   --site_list shopping \
   --auth_folder "$PWD/tasks/web-exploration/data"

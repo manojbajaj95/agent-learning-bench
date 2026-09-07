@@ -143,6 +143,14 @@ class GeneratorTests(unittest.TestCase):
         self.assertNotIn("COPY web/", text)
         self.assertNotIn("/opt/web/", text)
 
+    def test_readme_auth_command_prepares_import_and_output_paths(self) -> None:
+        text = (ROOT / "README.md").read_text()
+        mkdir = "mkdir -p tasks/web-exploration/data"
+        auto_login = "python3 /tmp/webarena/browser_env/auto_login.py"
+        self.assertIn(mkdir, text)
+        self.assertIn("PYTHONPATH=/tmp/webarena \\", text)
+        self.assertLess(text.index(mkdir), text.index(auto_login))
+
     def test_generate_removes_stale_staged_auth(self) -> None:
         root = Path(self.temp_dir.name) / "stale-auth"
         staged_auth = root / "environment" / "data" / "auth.json"
