@@ -1,21 +1,13 @@
-# Kestrel Depot
+# WebArena Shopping
 
-The environment has one company intranet. Browse it with:
+Read `/app/task.json`. Complete its `intent` on its `start_urls` using the installed `agent-browser` skill and CLI.
 
-```text
-web get <path>
-web post <path> field=value ...
-```
+Read `/app/notes.md` and `/app/sessions/` when useful. Update `/app/notes.md` with reusable knowledge about the Shopping site, not task-specific answers.
 
-The home page is `/`. Pages return HTML. Follow the links.
-
-Read `/app/question.md`. Do the job. Write the result to `/app/answer.json`:
+Write `/app/agent_response.json` in the WebArena-Verified schema:
 
 ```json
-{ "answer": "..." }
+{"task_type":"RETRIEVE|NAVIGATE|MUTATE","status":"SUCCESS","retrieved_data":null,"error_details":null}
 ```
 
-Use a short string. For a form job, write the confirmation code that the site returns.
-Quote values that contain spaces. Keep notes in `/app/notes.md` if useful. Past session logs are under `/app/sessions/`.
-
-Stop after writing `/app/answer.json`.
+Use the typed result format requested by the task. Stop after writing the response.

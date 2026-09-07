@@ -20,7 +20,7 @@ DATASET = DATA / "webarena-verified.json"
 INSTRUCTION = (ROOT / "instruction.md").read_text()
 TASK_TOML_HEAD = """\
 schema_version = "1.4"
-artifacts = ["/app/answer.json", "/app/question.md", "/app/notes.md", "/app/sessions"]
+artifacts = ["/app/agent_response.json", "/app/task.json", "/app/notes.md", "/app/sessions", "/logs/agent/network.har"]
 multi_step_reward_strategy = "mean"
 
 [task]
@@ -39,11 +39,11 @@ category = "web"
 tags = ["web", "multi-step", "learning"]
 
 [agent]
-timeout_sec = 180.0
+timeout_sec = 300.0
 user = "agent"
 
 [verifier]
-timeout_sec = 60.0
+timeout_sec = 180.0
 
 [environment]
 network_mode = "public"
@@ -91,7 +91,10 @@ def write_step(task: dict, steps_dir: Path) -> str:
     (step / "solution").mkdir()
     (step / "instruction.md").write_text(INSTRUCTION)
     (step / "workdir" / "setup.sh").write_text(
-        "#!/usr/bin/env bash\nset -euo pipefail\nrm -- \"$0\"\n"
+        "#!/usr/bin/env bash\n"
+        "set -euo pipefail\n"
+        f"python3 /opt/webarena/runtime.py prepare {task_id}\n"
+        "rm -- \"$0\"\n"
     )
     (step / "workdir" / "setup.sh").chmod(0o755)
     (step / "tests" / "test.sh").write_text(
@@ -139,10 +142,10 @@ def generate(tasks: list[dict], root: Path, limit: int | None) -> None:
                 name = "{name}"
 
                 [steps.agent]
-                timeout_sec = 180.0
+                timeout_sec = 300.0
 
                 [steps.verifier]
-                timeout_sec = 60.0
+                timeout_sec = 180.0
                 """
             )
         )

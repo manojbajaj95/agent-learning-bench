@@ -14,6 +14,19 @@ from generate_steps import ROOT, generate, load_shopping_tasks
 
 
 class GeneratorTests(unittest.TestCase):
+    def shopping_rows(self, count: int) -> list[dict]:
+        return [
+            {
+                "task_id": task_id,
+                "intent_template_id": 200 + task_id,
+                "sites": ["shopping"],
+                "intent": f"Shopping task {task_id}",
+                "start_urls": ["__SHOPPING__"],
+                "eval": [],
+            }
+            for task_id in range(21, 21 + count)
+        ]
+
     def write_json(self, rows: list[dict]) -> Path:
         path = Path(self.temp_dir.name) / "tasks.json"
         path.write_text(json.dumps(rows))
@@ -22,6 +35,28 @@ class GeneratorTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp_dir.cleanup)
+        self.temp_root = Path(self.temp_dir.name)
+
+    def test_generated_step_contract(self) -> None:
+        generate(self.shopping_rows(3), self.temp_root, limit=None)
+        setup = (self.temp_root / "steps/task-0021/workdir/setup.sh").read_text()
+        verify = (self.temp_root / "steps/task-0021/tests/test.sh").read_text()
+        manifest = (self.temp_root / "task.toml").read_text()
+        self.assertIn("runtime.py prepare 21", setup)
+        self.assertIn("runtime.py capture-stop", verify)
+        self.assertIn("runtime.py evaluate 21", verify)
+        self.assertEqual(3, manifest.count("[[steps]]"))
+        self.assertIn('schema_version = "1.4"', manifest)
+        self.assertIn('multi_step_reward_strategy = "mean"', manifest)
+        self.assertIn('user = "agent"', manifest)
+        self.assertIn('network_mode = "public"', manifest)
+        self.assertEqual(4, manifest.count("timeout_sec = 300.0"))
+        self.assertEqual(4, manifest.count("timeout_sec = 180.0"))
+        self.assertIn(
+            'artifacts = ["/app/agent_response.json", "/app/task.json", '
+            '"/app/notes.md", "/app/sessions", "/logs/agent/network.har"]',
+            manifest,
+        )
 
     def test_filters_exact_shopping_only(self) -> None:
         rows = [
