@@ -71,13 +71,16 @@ def load_shopping_tasks(path: Path) -> list[dict]:
 
 
 def agent_input(task: dict) -> dict:
-    return {
+    row = {
         "task_id": task["task_id"],
         "intent_template_id": task["intent_template_id"],
         "sites": task["sites"],
         "start_urls": task["start_urls"],
         "intent": task["intent"],
     }
+    if "results_schema" in task:
+        row["results_schema"] = task["results_schema"]
+    return row
 
 
 def write_step(task: dict, steps_dir: Path) -> str:

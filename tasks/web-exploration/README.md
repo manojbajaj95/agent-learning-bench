@@ -6,35 +6,47 @@ The benchmark uses the official WebArena Shopping service, not a bundled mock.
 
 ## Prerequisites
 
-- Docker with enough free disk for the 17.8 GB Shopping image
+- Docker Desktop with the `docker` CLI on `PATH` (or `~/.docker/bin/docker`)
+- Enough free disk for the 17.8 GB Shopping image
 - [Harbor](https://www.harborframework.com/docs)
 - `OPENAI_API_KEY`
-- The `webarena-verified` command
-- On macOS, a Docker setup that supports `http://host.docker.internal`; the
-  benchmark container reaches the host services through
-  `http://host.docker.internal:7770` and `http://host.docker.internal:7771`
+- On the host, `host.docker.internal` must resolve to this machine so Magento,
+  auth cookies, and the Harbor container share one origin. If
+  `python3 -c 'import socket; print(socket.gethostbyname("host.docker.internal"))'`
+  fails, add `127.0.0.1 host.docker.internal` to `/etc/hosts`.
 
 Use the OpenAI model id `gpt-5.6-luna` (dot, not hyphen).
 
-## Start Shopping
+## Start Shopping through the reset broker
 
-From the repository root, start the official Shopping image and wait for its
-reset controller to report healthy:
+The official env-ctrl API cannot restore Magento from snapshot. Start this
+host-side broker instead. It recreates `webarena_verified_shopping` with
+`WA_ENV_CTRL_EXTERNAL_SITE_URL=http://host.docker.internal:7770` and exposes
+`POST /reset` plus `GET /status` on port `7772`.
+
+From the repository root:
 
 ```bash
-webarena-verified env start --site shopping
-curl http://localhost:7771/status
+python3 tasks/web-exploration/reset_broker.py
 ```
 
-Shopping is served on port `7770`; the reset controller is on port `7771`.
-Before every task, the benchmark posts to the controller's `/reset` endpoint,
-waits for both services to become healthy, loads the saved authentication
-state, and starts a fresh network capture.
+In another terminal, wait until the first container is healthy:
+
+```bash
+curl -X POST http://localhost:7772/reset
+curl http://localhost:7772/status
+```
+
+Shopping is served on port `7770`. Env-ctrl stays on `7771` for the broker's
+health checks. Harbor task containers call the broker at
+`http://host.docker.internal:7772`. The first reset downloads the Shopping
+image and can take several minutes.
 
 ## Create the authentication state
 
-Generate the official Shopping storage state locally. Credentials stay in the
-browser state file and are never placed in the agent prompt.
+Generate the official Shopping storage state against the same origin the agent
+will use. Credentials stay in the browser state file and are never placed in
+the agent prompt.
 
 ```bash
 git clone https://github.com/web-arena-x/webarena.git /tmp/webarena
@@ -42,7 +54,7 @@ git -C /tmp/webarena checkout dce04686a56253aefba7b18a4fa0937cf1dc987b
 python3 -m pip install -r /tmp/webarena/requirements.txt
 python3 -m playwright install chromium
 mkdir -p tasks/web-exploration/data
-SHOPPING=http://localhost:7770 \
+SHOPPING=http://host.docker.internal:7770 \
 SHOPPING_ADMIN=unused REDDIT=unused GITLAB=unused \
 WIKIPEDIA=unused MAP=unused HOMEPAGE=unused \
 PYTHONPATH=/tmp/webarena \
@@ -57,7 +69,9 @@ mv tasks/web-exploration/data/shopping_state.json \
 
 ## Fetch and generate the smoke tasks
 
-Download the pinned dataset and generate the first three Shopping tasks:
+Download the pinned dataset and generate the first three Shopping tasks.
+Generation also stages `environment/data/` for the Docker build; `harbor run`
+fails clearly if those files are missing.
 
 ```bash
 ./tasks/web-exploration/download.sh
@@ -70,7 +84,8 @@ and the captured HAR with WebArena-Verified.
 
 ## Run the three-task smoke
 
-Run all three learning conditions with distinct job names:
+Keep the reset broker running. Then run all three learning conditions with
+distinct job names:
 
 ```bash
 harbor run -p tasks/web-exploration -a pi -m openai/gpt-5.6-luna \

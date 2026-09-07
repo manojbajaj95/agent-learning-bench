@@ -22,6 +22,7 @@ class GeneratorTests(unittest.TestCase):
                 "sites": ["shopping"],
                 "intent": f"Shopping task {task_id}",
                 "start_urls": ["__SHOPPING__"],
+                "results_schema": {"type": "array", "items": {"type": "string"}},
                 "eval": [],
             }
             for task_id in range(21, 21 + count)
@@ -56,6 +57,13 @@ class GeneratorTests(unittest.TestCase):
             'artifacts = ["/app/agent_response.json", "/app/task.json", '
             '"/app/notes.md", "/app/sessions", "/logs/agent/network.har"]',
             manifest,
+        )
+        agent_rows = json.loads(
+            (self.temp_root / "data" / "agent-input.json").read_text()
+        )
+        self.assertEqual(
+            {"type": "array", "items": {"type": "string"}},
+            agent_rows[0]["results_schema"],
         )
 
     def test_filters_exact_shopping_only(self) -> None:
@@ -137,9 +145,17 @@ class GeneratorTests(unittest.TestCase):
         text = (ROOT / "environment" / "Dockerfile").read_text()
         self.assertIn("agent-browser@0.36.0", text)
         self.assertIn("webarena-verified==1.2.3", text)
-        self.assertIn("/app/.pi/skills/agent-browser", text)
+        self.assertIn("node:24-bookworm-slim", text)
+        self.assertIn("chromium", text)
+        self.assertIn("AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium", text)
+        self.assertIn("HOME=/home/agent", text)
+        self.assertIn("/home/agent/.agents/skills/agent-browser", text)
         self.assertIn("COPY webarena/runtime.py /opt/webarena/runtime.py", text)
         self.assertIn("COPY data/ /opt/webarena/", text)
+        self.assertIn("/app/notes.md", text)
+        self.assertNotIn("setup_22.x", text)
+        self.assertNotIn("agent-browser install", text)
+        self.assertNotIn("/app/.pi/skills", text)
         self.assertNotIn("COPY web/", text)
         self.assertNotIn("/opt/web/", text)
 
@@ -150,6 +166,17 @@ class GeneratorTests(unittest.TestCase):
         self.assertIn(mkdir, text)
         self.assertIn("PYTHONPATH=/tmp/webarena \\", text)
         self.assertLess(text.index(mkdir), text.index(auto_login))
+        self.assertIn("python3 tasks/web-exploration/reset_broker.py", text)
+        self.assertIn("SHOPPING=http://host.docker.internal:7770", text)
+
+    def test_instruction_covers_statuses_and_browser_lifecycle(self):
+        text = (ROOT / "instruction.md").read_text()
+        self.assertIn("NOT_FOUND_ERROR", text)
+        self.assertIn("ACTION_NOT_ALLOWED_ERROR", text)
+        self.assertIn("error_details", text)
+        self.assertIn("results_schema", text)
+        self.assertIn("do not close the browser", text.lower())
+        self.assertIn("retrieved_data", text)
 
     def test_generate_removes_stale_staged_auth(self) -> None:
         root = Path(self.temp_dir.name) / "stale-auth"

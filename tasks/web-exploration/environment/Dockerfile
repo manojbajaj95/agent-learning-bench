@@ -1,43 +1,50 @@
-FROM ubuntu:24.04
+FROM node:24-bookworm-slim
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates curl python3 \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
+    && apt-get install -y --no-install-recommends \
+        python3 \
+        python3-pip \
+        ca-certificates \
+        chromium \
+        fonts-liberation \
+        util-linux \
     && rm -rf /var/lib/apt/lists/* \
     && useradd -m -s /bin/bash agent
 
-COPY --from=ghcr.io/astral-sh/uv:0.9.7 /uv /usr/local/bin/uv
-ENV UV_BREAK_SYSTEM_PACKAGES=1
-RUN uv pip install --python /usr/bin/python3 --system 'webarena-verified==1.2.3' \
-    && npm install -g 'agent-browser@0.36.0' \
-    && agent-browser install --with-deps
+ENV HOME=/home/agent
+ENV AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV AGENT_BROWSER_SESSION=webarena-shopping
 
-RUN mkdir -p /app/.pi/skills /app/sessions /opt/webarena /logs/agent /logs/verifier \
+RUN pip3 install --break-system-packages --no-cache-dir 'webarena-verified==1.2.3' \
+    && npm install -g 'agent-browser@0.36.0'
+
+RUN mkdir -p /app/sessions /opt/webarena /logs/agent /logs/verifier \
+        /home/agent/.agents/skills \
     && cp -R "$(npm root -g)/agent-browser/skills/agent-browser" \
-       /app/.pi/skills/agent-browser
+       /home/agent/.agents/skills/agent-browser \
+    && printf '%s\n' '{"args":["--no-sandbox","--disable-dev-shm-usage"]}' \
+       > /home/agent/agent-browser.json \
+    && touch /app/notes.md
 
 COPY webarena/runtime.py /opt/webarena/runtime.py
 COPY data/ /opt/webarena/
 
-RUN mv /opt/webarena/webarena-verified.json /opt/webarena/dataset.json \
-    && printf '%s\n' \
-       '{"test_data_file":"/opt/webarena/dataset.json","environments":{"__SHOPPING__":{"urls":["http://host.docker.internal:7770"]}}}' \
-       > /opt/webarena/config.json \
+RUN test -f /opt/webarena/webarena-verified.json \
+    && test -f /opt/webarena/agent-input.json \
+    && mv /opt/webarena/webarena-verified.json /opt/webarena/dataset.json \
     && chown -R root:root /opt/webarena /logs/verifier \
-    && chown -R agent:agent /app /logs/agent \
+    && chown -R agent:agent /app /logs/agent /home/agent \
+    && chmod -R a-w /home/agent/.agents/skills/agent-browser \
     && chgrp agent /opt/webarena \
     && chmod 750 /opt/webarena \
     && chmod 755 /opt/webarena/runtime.py \
     && chmod 644 /opt/webarena/agent-input.json \
-    && chmod 600 /opt/webarena/dataset.json /opt/webarena/config.json \
+    && chmod 600 /opt/webarena/dataset.json \
     && if [ -f /opt/webarena/auth.json ]; then \
          chgrp agent /opt/webarena/auth.json; chmod 640 /opt/webarena/auth.json; \
        fi
 
-ENV AGENT_BROWSER_SESSION=webarena-shopping
 ENV WEBARENA_SHOPPING_URL=http://host.docker.internal:7770
-ENV WEBARENA_CONTROL_URL=http://host.docker.internal:7771
+ENV WEBARENA_CONTROL_URL=http://host.docker.internal:7772
 ENV WEBARENA_AUTH_STATE=/opt/webarena/auth.json
-
 WORKDIR /app
