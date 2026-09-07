@@ -24,6 +24,7 @@ def summarize_trial(result: dict) -> dict:
             step["hit"] = rewards["won"] == 1
     return summary
 
+
 METRICS = (
     "reward",
     "won",
@@ -41,7 +42,9 @@ METRICS = (
 def analyze_job(job: Path) -> list[dict]:
     trials = []
     paths = (
-        [job / "result.json"]
+        [job / "no-memory.json"]
+        if (job / "no-memory.json").exists()
+        else [job / "result.json"]
         if (job / "config.json").exists() and any((job / "steps").glob("battle-*"))
         else sorted(job.glob("*/result.json"))
     )
@@ -81,7 +84,7 @@ def report(trials: list[dict]) -> str:
     lines = [
         "# Affinity Arena agent evaluation",
         "",
-        "Early = battles 1–5; late = 11–15; holdout = 16–20. Baseline files persist, so it can learn too.",
+        "Early = battles 1–5; late = 11–15; holdout = 16–20. File-memory baselines retain files; no-memory runs use a fresh sandbox per battle.",
         "",
         "| Job | Phase | Reward | Wins | Optimal actions | Draft quality | Regret | Belief accuracy |",
         "|---|---|---:|---:|---:|---:|---:|---:|",

@@ -131,12 +131,14 @@ All conditions use the same model, chart, and battle schedule:
 | Condition | Conversation state | Persistent files |
 |---|---|---|
 | Baseline | Fresh conversation per battle | Yes |
+| No memory | Fresh conversation and sandbox per battle | No |
 | Pi sessions | Fresh conversation with prior session logs | Yes |
 | In-context | Resumed trajectory | Yes |
 
 An oracle run must win all 20 battles before the task is considered valid.
-The baseline can learn through files and public battle logs; it is not the
-offline memoryless policy.
+The file-memory baseline can learn through files and public battle logs. The
+no-memory agent can learn within a battle, but nothing carries into the next.
+Neither is the offline scripted memoryless policy.
 
 ## Validation and reproducibility
 
@@ -281,6 +283,35 @@ a finished run once, then refresh the viewer (no rerun or API key needed):
 Existing trajectory files and original logs are preserved.
 
 ## Oracle and OpenAI comparison runs
+
+### True no-memory control
+
+With `GEMINI_API_KEY` exported, run the same twenty matchups in fresh sandboxes:
+
+```bash
+.venv/bin/python tasks/affinity-arena/run_no_memory.py \
+  --model google/gemini-3.5-flash --job-name arena-no-memory-1
+```
+
+No notes, scripts, session history, or prior battle logs carry over. The runner
+stops on an incomplete battle and preserves results without retrying it. Use a
+new job name each time. Add `--dry-run` to preview without API calls, or `--oracle`
+for a keyless correctness run. `--task` accepts another generated seed instance.
+
+The combined report is `jobs/arena-no-memory-1/comparison.md`. Compare it with
+a matched memory-enabled run using `analyze.py`:
+
+```bash
+.venv/bin/python tasks/affinity-arena/analyze.py \
+  jobs/arena-no-memory-1 jobs/arena-gemini-1 --require-complete \
+  --out-dir tasks/affinity-arena/results/memory-comparison
+```
+
+For individual trajectories, run `harbor view jobs/arena-no-memory-1/runs`.
+Chart coverage and belief metrics in this condition describe each battle
+independently, not accumulated knowledge. Fresh sandboxes add setup overhead.
+
+### Oracle and file-memory matrix
 
 Check the oracle without an API key:
 

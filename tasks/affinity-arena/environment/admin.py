@@ -28,7 +28,7 @@ try:
         restore_agent_log_access(Path("/logs/agent"), pwd.getpwnam("agent").pw_gid)
         # Harbor runs workdir/setup.sh as the agent. The root verifier prepares
         # the next battle; the first is initialized during the image build.
-        if index < len(runtime.trial["battles"]):
+        if not runtime.trial.get("isolated_battle") and index < len(runtime.trial["battles"]):
             runtime.start(index + 1)
         print("Battle settled.")
     else:

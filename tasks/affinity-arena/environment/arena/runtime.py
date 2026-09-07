@@ -114,9 +114,13 @@ class Runtime:
     def start(self, index: int) -> str:
         with self.locked():
             data = self.load()
+            isolated = self.trial.get("isolated_battle")
+            if isolated is not None and index != isolated:
+                raise ValueError("this sandbox contains only one playable battle")
             if data["current"] and data["current"]["index"] == index:
                 return self.publish(data)  # Retries never reset an attempt.
-            if index != len(data["completed"]) + 1 or not 1 <= index <= len(self.trial["battles"]):
+            expected = isolated if isolated is not None else len(data["completed"]) + 1
+            if index != expected or not 1 <= index <= len(self.trial["battles"]):
                 raise ValueError("battles must start in order, after previous settlement")
             data["current"] = {
                 "index": index,
