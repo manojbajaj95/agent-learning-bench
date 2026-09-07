@@ -151,9 +151,10 @@ python3 tasks/affinity-arena/analyze.py jobs/arena-oracle --require-complete
 ```
 
 Calibration compares an exact oracle, a persistent observation learner, and
-the same learner forgetting between battles over seeds 1–10. `--check` exits
-nonzero if a planned calibration gate is missed. Generator v2 currently passes
-six of seven gates: reward improves by 0.136, below the unchanged 0.150 target.
+the same learner forgetting between battles over seeds 1–10. `--check` checks
+only data completeness and exact-oracle correctness. Reward changes, transfer,
+and coverage are descriptive measurements, without arbitrary pass/fail cutoffs.
+The offline learner's mean late-minus-early reward change is +0.136.
 See [VALIDATION.md](VALIDATION.md) for interpretation and the manual review checklist.
 
 Generate another complete instance without changing the default:

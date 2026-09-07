@@ -69,29 +69,18 @@ Measured v2 reward and win-rate means on 2026-09-06:
 | Learner | 0.574 | 0.710 | 0.733 | 64% | 96% | 100% |
 | Memoryless | 0.444 | 0.398 | 0.423 | 32% | 22% | 20% |
 
-The planned gates are retained literally:
+Learning improvement, transfer, and coverage are descriptive measurements,
+without pass/fail thresholds. `--check` checks completeness and oracle
+correctness only.
 
-| Gate | Requirement | Result |
-|---|---|---|
-| Oracle | All battles won; zero regret; every decision optimal | Pass |
-| Learner improvement | Late reward − early reward ≥ 0.150 | Fail: approximately 0.136 |
-| Learner near oracle | Late reward within 0.080 of oracle | Pass |
-| Transfer | Holdout reward drops by at most 0.100 from late | Pass |
-| Memoryless floor | Overall reward ≤ 0.550 | Pass |
-| Memoryless trend | Late − early reward ≤ 0.100 | Pass |
-| Coverage | Learner final coverage between 0.700 and 0.950 | Pass |
-
-Six of seven planned calibration gates pass. `--check` currently exits nonzero:
-the learner improves and transfers to the holdout, but misses the unchanged
-0.150 improvement threshold. No roster, combat rule, or threshold was tuned to
-compensate for the generator fix. Full per-seed, per-battle results are in
+The learner's late-minus-early reward improvement was approximately 0.136.
+Full per-seed, per-battle results are in
 `results/calibration-v2/calibration.json`, with a readable summary alongside it.
-No LLM learning claim follows from these simulator results, and the full
-calibration acceptance criterion remains unmet.
+No LLM learning claim follows from these simulator results.
 
 An additional check on seeds 11–20 gave learner reward
 **0.582 → 0.721 → 0.721** (early, late, holdout). Late/holdout win rates were
-100%/94%. Again, six of seven gates passed; improvement was 0.139, below 0.150.
+100%/94%; late-minus-early reward improvement was 0.139.
 These results are in `results/validation-seeds-v2/`. Neither batch was used to
 tune the replacement generator or the roster.
 

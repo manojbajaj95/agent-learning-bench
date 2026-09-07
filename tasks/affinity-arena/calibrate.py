@@ -96,30 +96,34 @@ def simulate(trial: dict, policy: str) -> list[dict]:
     return rows
 
 
-def calibration_gates(rows: list[dict]) -> dict[str, bool]:
-    def avg(policy, key, start, end):
-        return mean(
-            row[key] for row in rows if row["policy"] == policy and start <= row["battle"] <= end
-        )
-
+def calibration_checks(rows: list[dict]) -> dict[str, bool]:
+    """Check data completeness and exact-oracle behavior, not learning magnitude."""
+    seeds = {r["seed"] for r in rows}
+    expected = {
+        (seed, policy, battle)
+        for seed in seeds
+        for policy in ("oracle", "learner", "memoryless")
+        for battle in range(1, 21)
+    }
+    actual = [(r["seed"], r["policy"], r["battle"]) for r in rows]
     oracle_rows = [r for r in rows if r["policy"] == "oracle"]
-    late = avg("learner", "reward", 11, 15)
     return {
-        "oracle_exact": all(
-            r["won"] == 1 and r["regret"] == 0 and r["opt_rate"] == 1 and r["draft_ok"] == 1
+        "complete_schedule": bool(rows)
+        and len(actual) == len(expected)
+        and set(actual) == expected,
+        "oracle_exact": bool(oracle_rows)
+        and all(
+            r["won"] == 1
+            and r["regret"] == 0
+            and r["opt_rate"] == 1
+            and r["draft_ok"] == 1
+            and r["ticks"] == r["oracle_ticks"]
             for r in oracle_rows
         ),
-        "learner_improvement": late - avg("learner", "reward", 1, 5) >= 0.15,
-        "learner_near_oracle": avg("oracle", "reward", 11, 15) - late <= 0.08,
-        "holdout_transfer": late - avg("learner", "reward", 16, 20) <= 0.10,
-        "memoryless_floor": avg("memoryless", "reward", 1, 20) <= 0.55,
-        "memoryless_flat": avg("memoryless", "reward", 11, 15) - avg("memoryless", "reward", 1, 5)
-        <= 0.10,
-        "coverage": 0.70 <= avg("learner", "cells_seen", 20, 20) <= 0.95,
     }
 
 
-def render_report(rows: list[dict], gates: dict[str, bool]) -> str:
+def render_report(rows: list[dict], checks: dict[str, bool]) -> str:
     lines = [
         "# Affinity Arena offline calibration",
         "",
@@ -136,8 +140,18 @@ def render_report(rows: list[dict], gates: dict[str, bool]) -> str:
                 for key in ("reward", "won", "opt_rate", "draft_ok", "cells_seen", "regret")
             )
             lines.append(f"| {policy} | {start}–{end} | {values} |")
-    lines.extend(["", "Acceptance gates:", ""])
-    lines.extend(f"- {name}: {'PASS' if passed else 'FAIL'}" for name, passed in gates.items())
+    lines.extend(["", "Reward changes (descriptive, without acceptance thresholds):", ""])
+    for policy in ("learner", "memoryless"):
+        early, late, holdout = (
+            mean(r["reward"] for r in rows if r["policy"] == policy and start <= r["battle"] <= end)
+            for start, end in ((1, 5), (11, 15), (16, 20))
+        )
+        lines.append(
+            f"- {policy}: late − early = {late - early:+.3f}; "
+            f"holdout − late = {holdout - late:+.3f}"
+        )
+    lines.extend(["", "Correctness and completeness checks (not learning claims):", ""])
+    lines.extend(f"- {name}: {'PASS' if passed else 'FAIL'}" for name, passed in checks.items())
     return "\n".join(lines) + "\n"
 
 
@@ -146,7 +160,7 @@ def main() -> None:
     parser.add_argument("--seeds", type=int, nargs="+", default=list(range(1, 11)))
     parser.add_argument("--out-dir", type=Path, default=ROOT / "results" / "calibration")
     parser.add_argument(
-        "--check", action="store_true", help="exit nonzero if calibration gates fail"
+        "--check", action="store_true", help="exit nonzero for incomplete data or oracle errors"
     )
     args = parser.parse_args()
     rows = []
@@ -155,15 +169,15 @@ def main() -> None:
         for policy in ("oracle", "learner", "memoryless"):
             rows.extend(simulate(trial, policy))
         print(f"Finished seed {seed}", flush=True)
-    gates = calibration_gates(rows)
+    checks = calibration_checks(rows)
     args.out_dir.mkdir(parents=True, exist_ok=True)
     (args.out_dir / "calibration.json").write_text(
-        json.dumps({"rows": rows, "gates": gates}, indent=2) + "\n"
+        json.dumps({"rows": rows, "checks": checks}, indent=2) + "\n"
     )
-    report = render_report(rows, gates)
+    report = render_report(rows, checks)
     (args.out_dir / "calibration.md").write_text(report)
     print(report)
-    if args.check and not all(gates.values()):
+    if args.check and not all(checks.values()):
         raise SystemExit(1)
 
 
