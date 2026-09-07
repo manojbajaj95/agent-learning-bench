@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 import runtime
@@ -141,6 +142,53 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(
             {"agent_browser_commands": 2.0}, runtime.trajectory_metrics()
         )
+
+    def test_evaluate_writes_reward_and_metrics(self):
+        runtime.RESPONSE_PATH.parent.mkdir(parents=True)
+        runtime.RESPONSE_PATH.write_text('{"answer": "done"}')
+        runtime.HAR_PATH.parent.mkdir(parents=True)
+        runtime.HAR_PATH.write_text('{"log": {"entries": []}}')
+        evaluator = mock.Mock()
+        evaluator.evaluate_task.return_value = SimpleNamespace(
+            score=1.0, status="SUCCESS"
+        )
+
+        reward = runtime.evaluate(
+            21,
+            evaluator=evaluator,
+            metrics={"unique_urls": 4.0, "agent_browser_commands": 7.0},
+        )
+
+        self.assertEqual(
+            {
+                "reward": 1.0,
+                "unique_urls": 4.0,
+                "agent_browser_commands": 7.0,
+            },
+            reward,
+        )
+        self.assertEqual(reward, json.loads(runtime.REWARD_PATH.read_text()))
+        evaluator.evaluate_task.assert_called_once_with(
+            task_id=21,
+            agent_response=runtime.RESPONSE_PATH,
+            network_trace=runtime.HAR_PATH,
+        )
+
+    def test_missing_response_is_infrastructure_error(self):
+        missing_path = runtime.APP / "missing-agent-response.json"
+        with self.assertRaisesRegex(RuntimeError, "agent_response.json is missing"):
+            runtime.evaluate(21, evaluator=mock.Mock(), response_path=missing_path)
+
+    def test_evaluator_error_propagates(self):
+        runtime.RESPONSE_PATH.parent.mkdir(parents=True)
+        runtime.RESPONSE_PATH.write_text("{}")
+        runtime.HAR_PATH.parent.mkdir(parents=True)
+        runtime.HAR_PATH.write_text("{}")
+        evaluator = mock.Mock()
+        evaluator.evaluate_task.side_effect = ValueError("evaluation failed")
+
+        with self.assertRaisesRegex(ValueError, "evaluation failed"):
+            runtime.evaluate(21, evaluator=evaluator)
 
     def test_reset_failure_is_not_reward_zero(self):
         with self.assertRaisesRegex(RuntimeError, "Shopping reset failed"):

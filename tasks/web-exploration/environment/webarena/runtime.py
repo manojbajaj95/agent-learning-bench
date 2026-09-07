@@ -28,6 +28,7 @@ APP = Path("/app")
 TASK_PATH = APP / "task.json"
 RESPONSE_PATH = APP / "agent_response.json"
 INPUT_PATH = Path("/opt/webarena/agent-input.json")
+CONFIG_PATH = Path("/opt/webarena/config.json")
 HAR_PATH = Path("/logs/agent/network.har")
 TRAJECTORY_PATH = Path("/logs/agent/trajectory.json")
 REWARD_PATH = Path("/logs/verifier/reward.json")
@@ -147,15 +148,51 @@ def collect_metrics() -> dict[str, float]:
     return {**har_metrics(har, SHOPPING_URL), **trajectory_metrics()}
 
 
+def build_evaluator():
+    from webarena_verified.api import WebArenaVerified
+    from webarena_verified.types.config import WebArenaVerifiedConfig
+
+    config = WebArenaVerifiedConfig.model_validate_json(CONFIG_PATH.read_text())
+    return WebArenaVerified(config=config)
+
+
+def evaluate(
+    task_id: int,
+    evaluator=None,
+    metrics: dict[str, float] | None = None,
+    response_path: Path | None = None,
+) -> dict[str, float]:
+    response_path = response_path or RESPONSE_PATH
+    if not response_path.is_file():
+        raise RuntimeError("agent_response.json is missing")
+    if not HAR_PATH.is_file():
+        raise RuntimeError("network.har is missing")
+    result = (evaluator or build_evaluator()).evaluate_task(
+        task_id=task_id,
+        agent_response=response_path,
+        network_trace=HAR_PATH,
+    )
+    reward = {"reward": float(result.score), **(metrics or collect_metrics())}
+    REWARD_PATH.parent.mkdir(parents=True, exist_ok=True)
+    REWARD_PATH.write_text(json.dumps(reward) + "\n")
+    return reward
+
+
 def main(argv: list[str]) -> None:
     if not argv:
-        raise SystemExit("usage: runtime.py prepare TASK_ID | capture-stop")
+        raise SystemExit(
+            "usage: runtime.py prepare TASK_ID | capture-stop | evaluate TASK_ID"
+        )
     if argv[0] == "prepare" and len(argv) == 2:
         prepare(int(argv[1]))
     elif argv == ["capture-stop"]:
         capture_stop()
+    elif argv[0] == "evaluate" and len(argv) == 2:
+        evaluate(int(argv[1]))
     else:
-        raise SystemExit("usage: runtime.py prepare TASK_ID | capture-stop")
+        raise SystemExit(
+            "usage: runtime.py prepare TASK_ID | capture-stop | evaluate TASK_ID"
+        )
 
 
 if __name__ == "__main__":

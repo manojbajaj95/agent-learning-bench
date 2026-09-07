@@ -62,7 +62,15 @@ class GeneratorTests(unittest.TestCase):
         ]
         generate(rows, alt_root, limit=None)
 
-        self.assertTrue((alt_root / "steps" / "task-0021").is_dir())
+        step = alt_root / "steps" / "task-0021"
+        self.assertTrue(step.is_dir())
+        self.assertEqual(
+            "#!/usr/bin/env bash\n"
+            "set -euo pipefail\n"
+            "runuser -u agent -- python3 /opt/webarena/runtime.py capture-stop\n"
+            "python3 /opt/webarena/runtime.py evaluate 21\n",
+            (step / "tests" / "test.sh").read_text(),
+        )
         self.assertTrue((alt_root / "data" / "agent-input.json").is_file())
         self.assertTrue((alt_root / "task.toml").is_file())
         if repo_steps.is_dir():

@@ -95,7 +95,10 @@ def write_step(task: dict, steps_dir: Path) -> str:
     )
     (step / "workdir" / "setup.sh").chmod(0o755)
     (step / "tests" / "test.sh").write_text(
-        "#!/usr/bin/env bash\nset -euo pipefail\n"
+        "#!/usr/bin/env bash\n"
+        "set -euo pipefail\n"
+        "runuser -u agent -- python3 /opt/webarena/runtime.py capture-stop\n"
+        f"python3 /opt/webarena/runtime.py evaluate {task_id}\n"
     )
     (step / "tests" / "test.sh").chmod(0o755)
     return name
