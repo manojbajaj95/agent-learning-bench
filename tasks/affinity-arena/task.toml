@@ -1,0 +1,110 @@
+schema_version = "1.4"
+multi_step_reward_strategy = "mean"
+artifacts = ["/app/view.txt", "/app/notes.md", "/app/affinity-chart.json", "/app/sessions"]
+
+[task]
+name = "agent-learning-bench/affinity-arena"
+version = "0.2.1"
+description = "Learn a hidden affinity chart across twenty deterministic creature battles."
+keywords = ["multi-step", "learning", "games", "hidden-chart"]
+
+[metadata]
+difficulty = "hard"
+category = "games"
+seed = 1
+
+[agent]
+user = "agent"
+timeout_sec = 180.0
+
+[verifier]
+user = "root"
+timeout_sec = 30.0
+
+[environment]
+network_mode = "public"
+build_timeout_sec = 600.0
+cpus = 1
+memory_mb = 2048
+storage_mb = 10240
+workdir = "/app"
+
+[[steps]]
+name = "battle-01"
+artifacts = ["/app/battles/battle-01.jsonl"]
+
+[[steps]]
+name = "battle-02"
+artifacts = ["/app/battles/battle-02.jsonl"]
+
+[[steps]]
+name = "battle-03"
+artifacts = ["/app/battles/battle-03.jsonl"]
+
+[[steps]]
+name = "battle-04"
+artifacts = ["/app/battles/battle-04.jsonl"]
+
+[[steps]]
+name = "battle-05"
+artifacts = ["/app/battles/battle-05.jsonl"]
+
+[[steps]]
+name = "battle-06"
+artifacts = ["/app/battles/battle-06.jsonl"]
+
+[[steps]]
+name = "battle-07"
+artifacts = ["/app/battles/battle-07.jsonl"]
+
+[[steps]]
+name = "battle-08"
+artifacts = ["/app/battles/battle-08.jsonl"]
+
+[[steps]]
+name = "battle-09"
+artifacts = ["/app/battles/battle-09.jsonl"]
+
+[[steps]]
+name = "battle-10"
+artifacts = ["/app/battles/battle-10.jsonl"]
+
+[[steps]]
+name = "battle-11"
+artifacts = ["/app/battles/battle-11.jsonl"]
+
+[[steps]]
+name = "battle-12"
+artifacts = ["/app/battles/battle-12.jsonl"]
+
+[[steps]]
+name = "battle-13"
+artifacts = ["/app/battles/battle-13.jsonl"]
+
+[[steps]]
+name = "battle-14"
+artifacts = ["/app/battles/battle-14.jsonl"]
+
+[[steps]]
+name = "battle-15"
+artifacts = ["/app/battles/battle-15.jsonl"]
+
+[[steps]]
+name = "battle-16"
+artifacts = ["/app/battles/battle-16.jsonl"]
+
+[[steps]]
+name = "battle-17"
+artifacts = ["/app/battles/battle-17.jsonl"]
+
+[[steps]]
+name = "battle-18"
+artifacts = ["/app/battles/battle-18.jsonl"]
+
+[[steps]]
+name = "battle-19"
+artifacts = ["/app/battles/battle-19.jsonl"]
+
+[[steps]]
+name = "battle-20"
+artifacts = ["/app/battles/battle-20.jsonl"]
