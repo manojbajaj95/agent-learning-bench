@@ -43,22 +43,21 @@ Then download the dataset once:
 ./tasks/web-exploration/download.sh
 ```
 
-`run_smoke.sh` and `run_baseline_full.sh` are **not** both required. Smoke is
-three tasks to check the image. Full is the 187-task run. Pick one. If you
-smoke first, regenerate all 187 steps before full.
+Smoke is three tasks to check the image. Full is the 187-task run. Pick one.
+If you smoke first, regenerate all 187 steps before full.
 
 ### Three-task smoke (optional)
 
 ```bash
 python3 tasks/web-exploration/generate_steps.py --n 3
-./tasks/web-exploration/run_smoke.sh
+harbor run -p tasks/web-exploration -a pi -m openai/gpt-5.6-luna --agent-timeout-multiplier 5 --job-name webarena-shopping-baseline-smoke-3
 ```
 
 ### All 187 tasks
 
 ```bash
 python3 tasks/web-exploration/generate_steps.py
-./tasks/web-exploration/run_baseline_full.sh
+harbor run -p tasks/web-exploration -a pi -m openai/gpt-5.6-luna --agent-timeout-multiplier 5 --job-name webarena-shopping-baseline-full-v2
 ```
 
 Each Harbor step recreates Magento, then logs in after each reset as the

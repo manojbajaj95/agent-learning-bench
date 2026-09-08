@@ -4,7 +4,6 @@ jobs/
 __pycache__/
 *.pyc
 .venv/
-.worktrees/
 tasks/database-analytics/data/
 tasks/database-analytics/environment/data/
 tasks/database-analytics/steps/
