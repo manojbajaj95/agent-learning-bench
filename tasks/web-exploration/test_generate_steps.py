@@ -33,17 +33,26 @@ class GeneratorTests(unittest.TestCase):
         path.write_text(json.dumps(rows))
         return path
 
+    def write_dataset(self, root: Path, rows: list[dict]) -> Path:
+        path = root / "data" / "webarena-verified.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(rows) + "\n")
+        return path
+
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp_dir.cleanup)
         self.temp_root = Path(self.temp_dir.name)
 
     def test_generated_step_contract(self) -> None:
-        generate(self.shopping_rows(3), self.temp_root, limit=None)
+        rows = self.shopping_rows(3)
+        self.write_dataset(self.temp_root, rows)
+        generate(rows, self.temp_root, limit=None)
         setup = (self.temp_root / "steps/task-0021/workdir/setup.sh").read_text()
         verify = (self.temp_root / "steps/task-0021/tests/test.sh").read_text()
         manifest = (self.temp_root / "task.toml").read_text()
         self.assertIn("runtime.py prepare 21", setup)
+        self.assertIn("/logs/agent/prepare.log", setup)
         self.assertIn("runtime.py capture-stop", verify)
         self.assertIn("runtime.py evaluate 21", verify)
         self.assertEqual(3, manifest.count("[[steps]]"))
@@ -55,7 +64,7 @@ class GeneratorTests(unittest.TestCase):
         self.assertEqual(4, manifest.count("timeout_sec = 180.0"))
         self.assertIn(
             'artifacts = ["/app/agent_response.json", "/app/task.json", '
-            '"/app/notes.md", "/app/sessions", "/logs/agent/network.har"]',
+            '"/app/notes.md", "/logs/agent/network.har"]',
             manifest,
         )
         agent_rows = json.loads(
@@ -93,8 +102,6 @@ class GeneratorTests(unittest.TestCase):
 
         alt_root = Path(self.temp_dir.name) / "alt"
         alt_root.mkdir()
-        (alt_root / "data").mkdir()
-        (alt_root / "data" / "auth.json").write_text('{"cookies": []}\n')
         rows = [
             {
                 "task_id": 21,
@@ -105,6 +112,7 @@ class GeneratorTests(unittest.TestCase):
                 "eval": [],
             },
         ]
+        self.write_dataset(alt_root, rows)
         generate(rows, alt_root, limit=None)
 
         step = alt_root / "steps" / "task-0021"
@@ -120,7 +128,7 @@ class GeneratorTests(unittest.TestCase):
         self.assertTrue(
             (alt_root / "environment" / "data" / "agent-input.json").is_file()
         )
-        self.assertTrue((alt_root / "environment" / "data" / "auth.json").is_file())
+        self.assertFalse((alt_root / "environment" / "data" / "auth.json").exists())
         self.assertEqual(
             rows,
             json.loads(
@@ -148,6 +156,8 @@ class GeneratorTests(unittest.TestCase):
         self.assertIn("node:24-bookworm-slim", text)
         self.assertIn("chromium", text)
         self.assertIn("AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium", text)
+        self.assertNotIn("WEBARENA_AUTH_STATE", text)
+        self.assertNotIn("auth.json", text)
         self.assertIn("HOME=/home/agent", text)
         self.assertIn("/home/agent/.agents/skills/agent-browser", text)
         self.assertIn("COPY webarena/runtime.py /opt/webarena/runtime.py", text)
@@ -159,15 +169,13 @@ class GeneratorTests(unittest.TestCase):
         self.assertNotIn("COPY web/", text)
         self.assertNotIn("/opt/web/", text)
 
-    def test_readme_auth_command_prepares_import_and_output_paths(self) -> None:
+    def test_readme_does_not_require_cookie_auth(self) -> None:
         text = (ROOT / "README.md").read_text()
-        mkdir = "mkdir -p tasks/web-exploration/data"
-        auto_login = "python3 /tmp/webarena/browser_env/auto_login.py"
-        self.assertIn(mkdir, text)
-        self.assertIn("PYTHONPATH=/tmp/webarena \\", text)
-        self.assertLess(text.index(mkdir), text.index(auto_login))
         self.assertIn("python3 tasks/web-exploration/reset_broker.py", text)
-        self.assertIn("SHOPPING=http://host.docker.internal:7770", text)
+        self.assertIn("http://host.docker.internal:7770", text)
+        self.assertIn("logs in after each reset", text)
+        self.assertIn("tasks/web-exploration/run_smoke.sh", text)
+        self.assertNotIn("auto_login.py", text)
 
     def test_instruction_covers_statuses_and_browser_lifecycle(self):
         text = (ROOT / "instruction.md").read_text()
@@ -178,11 +186,8 @@ class GeneratorTests(unittest.TestCase):
         self.assertIn("do not close the browser", text.lower())
         self.assertIn("retrieved_data", text)
 
-    def test_generate_removes_stale_staged_auth(self) -> None:
+    def test_generate_does_not_stage_auth(self) -> None:
         root = Path(self.temp_dir.name) / "stale-auth"
-        staged_auth = root / "environment" / "data" / "auth.json"
-        staged_auth.parent.mkdir(parents=True)
-        staged_auth.write_text('{"stale": true}\n')
         rows = [
             {
                 "task_id": 21,
@@ -193,10 +198,48 @@ class GeneratorTests(unittest.TestCase):
                 "eval": [],
             }
         ]
+        self.write_dataset(root, rows)
+        (root / "data" / "auth.json").write_text('{"cookies": []}\n')
 
         generate(rows, root, limit=None)
 
-        self.assertFalse(staged_auth.exists())
+        self.assertFalse((root / "environment" / "data" / "auth.json").exists())
+
+    def test_generate_stages_full_evaluator_dataset(self) -> None:
+        root = Path(self.temp_dir.name) / "full-dataset"
+        rows = []
+        for task_id in range(1, 813):
+            if task_id <= 187:
+                rows.append(
+                    {
+                        "task_id": task_id,
+                        "intent_template_id": 1000 + task_id,
+                        "sites": ["shopping"],
+                        "intent": f"Shopping task {task_id}",
+                        "start_urls": ["__SHOPPING__"],
+                        "eval": [],
+                    }
+                )
+            else:
+                rows.append(
+                    {
+                        "task_id": task_id,
+                        "sites": ["reddit"],
+                        "intent": f"Other task {task_id}",
+                        "start_urls": ["__REDDIT__"],
+                        "eval": [],
+                    }
+                )
+        self.write_dataset(root, rows)
+        shopping = load_shopping_tasks(root / "data" / "webarena-verified.json")
+        generate(shopping, root, limit=3)
+
+        staged = json.loads(
+            (root / "environment" / "data" / "webarena-verified.json").read_text()
+        )
+        self.assertEqual(812, len(staged))
+        self.assertEqual(3, len(json.loads((root / "data" / "agent-input.json").read_text())))
+        self.assertEqual(3, (root / "task.toml").read_text().count("[[steps]]"))
 
 
 if __name__ == "__main__":

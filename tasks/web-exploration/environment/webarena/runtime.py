@@ -20,10 +20,14 @@ SHOPPING_URL = os.environ.get(
 CONTROL_URL = os.environ.get(
     "WEBARENA_CONTROL_URL", "http://host.docker.internal:7772"
 ).rstrip("/")
-AUTH_STATE = os.environ.get("WEBARENA_AUTH_STATE", "/opt/webarena/auth.json")
 SESSION = os.environ.get("AGENT_BROWSER_SESSION", "webarena-shopping")
 REQUEST_TIMEOUT_SEC = int(os.environ.get("WEBARENA_REQUEST_TIMEOUT_SEC", "30"))
 RESET_TIMEOUT_SEC = int(os.environ.get("WEBARENA_RESET_TIMEOUT_SEC", "600"))
+LOGIN_WAIT_SEC = int(os.environ.get("WEBARENA_LOGIN_WAIT_SEC", "30"))
+SHOPPING_EMAIL = os.environ.get(
+    "WEBARENA_SHOPPING_EMAIL", "emma.lopez@gmail.com"
+)
+SHOPPING_PASSWORD = os.environ.get("WEBARENA_SHOPPING_PASSWORD", "Password.123")
 HEALTH_PATH = "/customer/account/login"
 ACCOUNT_PATH = "/customer/account"
 DATASET_PATH = Path("/opt/webarena/dataset.json")
@@ -34,6 +38,7 @@ RESPONSE_PATH = APP / "agent_response.json"
 INPUT_PATH = Path("/opt/webarena/agent-input.json")
 HAR_PATH = Path("/logs/agent/network.har")
 TRAJECTORY_PATH = Path("/logs/agent/trajectory.json")
+PI_LOG_PATH = Path("/logs/agent/pi.txt")
 REWARD_PATH = Path("/logs/verifier/reward.json")
 
 
@@ -89,12 +94,16 @@ def reset_site() -> None:
 def browser(
     args: list[str], check: bool = True
 ) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
+    result = subprocess.run(
         ["agent-browser", "--session", SESSION, "--json", *args],
-        check=check,
+        check=False,
         text=True,
         capture_output=True,
     )
+    if check and result.returncode != 0:
+        detail = (result.stderr or result.stdout or "").strip()
+        raise RuntimeError(f"agent-browser {' '.join(args)} failed: {detail}")
+    return result
 
 
 def load_task(task_id: int) -> dict:
@@ -129,44 +138,77 @@ def parse_browser_url(stdout: str) -> str:
 
 
 def require_authenticated() -> None:
-    browser(["open", f"{SHOPPING_URL}{ACCOUNT_PATH}"])
-    url = parse_browser_url(browser(["get", "url"]).stdout)
-    if "login" in urlsplit(url).path.lower():
-        raise RuntimeError("authenticated state is not logged in")
+    deadline = time.monotonic() + LOGIN_WAIT_SEC
+    while True:
+        opened = browser(["open", f"{SHOPPING_URL}{ACCOUNT_PATH}"], check=False)
+        if opened.returncode == 0:
+            url = parse_browser_url(browser(["get", "url"], check=False).stdout or "")
+            if url and "login" not in urlsplit(url).path.lower():
+                return
+        if time.monotonic() >= deadline:
+            raise RuntimeError("authenticated state is not logged in")
+        time.sleep(1)
+
+
+def login() -> None:
+    browser(["open", f"{SHOPPING_URL}{HEALTH_PATH}"])
+    browser(["fill", "#email", SHOPPING_EMAIL])
+    browser(["fill", "#pass", SHOPPING_PASSWORD])
+    browser(["click", "#send2"])
+    browser(["wait", "2000"])
+
+
+def kill_browser_daemons() -> None:
+    try:
+        subprocess.run(
+            ["pkill", "-f", "agent-browser-linux"],
+            check=False,
+            capture_output=True,
+        )
+    except FileNotFoundError:
+        return
 
 
 def prepare(task_id: int, task: dict | None = None) -> None:
-    if not Path(AUTH_STATE).is_file():
-        raise RuntimeError(f"auth state is missing: {AUTH_STATE}")
     task = render_task(task or load_task(task_id))
     reset_site()
     APP.mkdir(parents=True, exist_ok=True)
     TASK_PATH.write_text(json.dumps(task, indent=2) + "\n")
     for path in (RESPONSE_PATH, HAR_PATH):
         path.unlink(missing_ok=True)
-    browser(["close"], check=False)
-    browser(["open"])
-    browser(["state", "load", AUTH_STATE])
+    browser(["close", "--all"], check=False)
+    kill_browser_daemons()
+    launch_browser()
+    login()
     require_authenticated()
     browser(["network", "har", "start", "--content", "text"])
 
 
-def capture_stop() -> dict:
+def launch_browser(attempts: int = 3) -> None:
+    last: Exception | None = None
+    for attempt in range(attempts):
+        try:
+            browser(["open"])
+            return
+        except RuntimeError as exc:
+            last = exc
+            if attempt + 1 == attempts:
+                raise
+            time.sleep(1)
+    raise last or RuntimeError("agent-browser open failed")
+
+
+def capture_stop() -> dict | None:
     HAR_PATH.parent.mkdir(parents=True, exist_ok=True)
     HAR_PATH.unlink(missing_ok=True)
     result = browser(["network", "har", "stop", str(HAR_PATH)], check=False)
-    if result.returncode != 0:
-        detail = (result.stderr or result.stdout or "").strip()
-        raise RuntimeError(
-            "HAR capture failed; do not close the browser or stop HAR "
-            f"during the task: {detail}"
-        )
-    if not HAR_PATH.is_file():
-        raise RuntimeError("network.har is missing after capture-stop")
+    if result.returncode != 0 or not HAR_PATH.is_file():
+        return None
     try:
         return json.loads(HAR_PATH.read_text())
-    except json.JSONDecodeError as exc:
-        raise RuntimeError("network.har is invalid JSON") from exc
+    except json.JSONDecodeError:
+        HAR_PATH.unlink(missing_ok=True)
+        return None
 
 
 def har_metrics(har: dict, shopping_url: str) -> dict[str, float]:
@@ -187,10 +229,32 @@ def command_tokens(item: str) -> list[str]:
         return item.split()
 
 
+def uses_agent_browser(command: str) -> bool:
+    return "agent-browser" in command_tokens(command)
+
+
+def pi_log_metrics(path: Path | None = None) -> dict[str, float]:
+    path = path or PI_LOG_PATH
+    if not path.is_file():
+        return {"agent_browser_commands": 0.0}
+    count = 0
+    for line in path.read_text().splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if event.get("type") != "tool_execution_start":
+            continue
+        command = (event.get("args") or {}).get("command")
+        if isinstance(command, str) and uses_agent_browser(command):
+            count += 1
+    return {"agent_browser_commands": float(count)}
+
+
 def trajectory_metrics(path: Path | None = None) -> dict[str, float]:
     path = path or TRAJECTORY_PATH
     if not path.is_file():
-        return {"agent_browser_commands": 0.0}
+        return pi_log_metrics()
 
     def count(value) -> int:
         if isinstance(value, dict):
@@ -199,7 +263,7 @@ def trajectory_metrics(path: Path | None = None) -> dict[str, float]:
                 for key, item in value.items()
                 if key == "command"
                 and isinstance(item, str)
-                and "agent-browser" in command_tokens(item)
+                and uses_agent_browser(item)
             )
             return commands + sum(count(item) for item in value.values())
         if isinstance(value, list):
@@ -238,6 +302,12 @@ def build_evaluator():
     return WebArenaVerified(config=config)
 
 
+def write_reward(reward: dict) -> dict:
+    REWARD_PATH.parent.mkdir(parents=True, exist_ok=True)
+    REWARD_PATH.write_text(json.dumps(reward) + "\n")
+    return reward
+
+
 def evaluate(
     task_id: int,
     evaluator=None,
@@ -245,10 +315,13 @@ def evaluate(
     response_path: Path | None = None,
 ) -> dict[str, float]:
     response_path = response_path or RESPONSE_PATH
-    if not response_path.is_file():
-        raise RuntimeError("agent_response.json is missing")
-    if not HAR_PATH.is_file():
-        raise RuntimeError("network.har is missing")
+    if not response_path.is_file() or not HAR_PATH.is_file():
+        if metrics is None:
+            try:
+                metrics = collect_metrics()
+            except RuntimeError:
+                metrics = {"unique_urls": 0.0, **trajectory_metrics()}
+        return write_reward({"reward": 0.0, **metrics})
     result = (evaluator or build_evaluator()).evaluate_task(
         task_id=task_id,
         agent_response=response_path,
@@ -256,10 +329,9 @@ def evaluate(
     )
     if evaluator_status_name(getattr(result, "status", "")) == "ERROR":
         raise RuntimeError(getattr(result, "error_msg", None) or "evaluator error")
-    reward = {"reward": float(result.score), **(metrics or collect_metrics())}
-    REWARD_PATH.parent.mkdir(parents=True, exist_ok=True)
-    REWARD_PATH.write_text(json.dumps(reward) + "\n")
-    return reward
+    return write_reward(
+        {"reward": float(result.score), **(metrics or collect_metrics())}
+    )
 
 
 def main(argv: list[str]) -> None:
@@ -280,4 +352,8 @@ def main(argv: list[str]) -> None:
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    try:
+        main(sys.argv[1:])
+    except Exception as exc:
+        print(exc, flush=True)
+        raise

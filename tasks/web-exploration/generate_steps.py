@@ -20,7 +20,7 @@ DATASET = DATA / "webarena-verified.json"
 INSTRUCTION = (ROOT / "instruction.md").read_text()
 TASK_TOML_HEAD = """\
 schema_version = "1.4"
-artifacts = ["/app/agent_response.json", "/app/task.json", "/app/notes.md", "/app/sessions", "/logs/agent/network.har"]
+artifacts = ["/app/agent_response.json", "/app/task.json", "/app/notes.md", "/logs/agent/network.har"]
 multi_step_reward_strategy = "mean"
 
 [task]
@@ -96,7 +96,11 @@ def write_step(task: dict, steps_dir: Path) -> str:
     (step / "workdir" / "setup.sh").write_text(
         "#!/usr/bin/env bash\n"
         "set -euo pipefail\n"
-        f"python3 /opt/webarena/runtime.py prepare {task_id}\n"
+        f"python3 /opt/webarena/runtime.py prepare {task_id} "
+        "> /logs/agent/prepare.log 2>&1 || {\n"
+        "  cat /logs/agent/prepare.log\n"
+        "  exit 1\n"
+        "}\n"
         "rm -- \"$0\"\n"
     )
     (step / "workdir" / "setup.sh").chmod(0o755)
@@ -121,14 +125,11 @@ def generate(tasks: list[dict], root: Path, limit: int | None) -> None:
     (environment_data / "agent-input.json").write_text(
         json.dumps(agent_rows, indent=2) + "\n"
     )
-    (environment_data / "webarena-verified.json").write_text(
-        json.dumps(tasks, indent=2) + "\n"
-    )
-    auth = data_dir / "auth.json"
-    if auth.is_file():
-        shutil.copy2(auth, environment_data / "auth.json")
-    else:
-        (environment_data / "auth.json").unlink(missing_ok=True)
+    dataset = data_dir / "webarena-verified.json"
+    if not dataset.is_file():
+        raise SystemExit(f"missing {dataset}; run ./download.sh first")
+    shutil.copy2(dataset, environment_data / "webarena-verified.json")
+    (environment_data / "auth.json").unlink(missing_ok=True)
 
     steps_dir = root / "steps"
     if steps_dir.exists():

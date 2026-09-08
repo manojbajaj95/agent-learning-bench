@@ -19,17 +19,17 @@ class RuntimeTests(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp_dir.cleanup)
         root = Path(self.temp_dir.name)
-        auth_state = root / "auth.json"
-        auth_state.write_text("{}")
         self.paths = mock.patch.multiple(
             runtime,
             APP=root / "app",
             TASK_PATH=root / "app" / "task.json",
             RESPONSE_PATH=root / "app" / "agent_response.json",
-            AUTH_STATE=str(auth_state),
+            LOGIN_WAIT_SEC=0,
             HAR_PATH=root / "logs" / "agent" / "network.har",
             TRAJECTORY_PATH=root / "logs" / "agent" / "trajectory.json",
+            PI_LOG_PATH=root / "logs" / "agent" / "pi.txt",
             REWARD_PATH=root / "logs" / "verifier" / "reward.json",
+            create=True,
         )
         self.paths.start()
         self.addCleanup(self.paths.stop)
@@ -51,8 +51,12 @@ class RuntimeTests(unittest.TestCase):
 
         with mock.patch.object(runtime, "SHOPPING_URL", "http://shop"), mock.patch.object(
             runtime, "reset_site", reset
-        ), mock.patch.object(runtime, "browser", browser):
+        ), mock.patch.object(runtime, "browser", browser), mock.patch.object(
+            runtime, "kill_browser_daemons", create=True
+        ) as kill:
             runtime.prepare(21, task=task)
+
+        kill.assert_called_once()
 
         names = [name for name, *_ in parent.mock_calls]
         self.assertEqual("reset_site", names[0])
@@ -70,15 +74,41 @@ class RuntimeTests(unittest.TestCase):
         )
         self.assertEqual(
             [
-                mock.call(["close"], check=False),
+                mock.call(["close", "--all"], check=False),
                 mock.call(["open"]),
-                mock.call(["state", "load", runtime.AUTH_STATE]),
-                mock.call(["open", "http://shop/customer/account"]),
-                mock.call(["get", "url"]),
+                mock.call(["open", "http://shop/customer/account/login"]),
+                mock.call(["fill", "#email", "emma.lopez@gmail.com"]),
+                mock.call(["fill", "#pass", "Password.123"]),
+                mock.call(["click", "#send2"]),
+                mock.call(["wait", "2000"]),
+                mock.call(["open", "http://shop/customer/account"], check=False),
+                mock.call(["get", "url"], check=False),
                 mock.call(["network", "har", "start", "--content", "text"]),
             ],
             browser.call_args_list,
         )
+
+    def test_prepare_retries_browser_open(self):
+        opens = {"n": 0}
+
+        def browser(args, check=True):
+            if args == ["open"]:
+                opens["n"] += 1
+                if opens["n"] == 1:
+                    raise RuntimeError("agent-browser open failed: socket")
+            return self.browser_ok(args, check)
+
+        with mock.patch.object(runtime, "reset_site"), mock.patch.object(
+            runtime, "SHOPPING_URL", "http://shop"
+        ), mock.patch.object(runtime, "browser", side_effect=browser), mock.patch.object(
+            runtime.time, "sleep"
+        ), mock.patch.object(runtime, "kill_browser_daemons", create=True):
+            runtime.prepare(
+                21,
+                task={"task_id": 21, "intent": "x", "start_urls": ["http://shop/"]},
+            )
+
+        self.assertEqual(2, opens["n"])
 
     @staticmethod
     def browser_ok(args, check=True):
@@ -87,11 +117,6 @@ class RuntimeTests(unittest.TestCase):
                 args, 0, json.dumps({"data": "http://shop/customer/account"}), ""
             )
         return subprocess.CompletedProcess(args, 0, "{}", "")
-
-    def test_prepare_requires_auth_state(self):
-        Path(runtime.AUTH_STATE).unlink()
-        with self.assertRaisesRegex(RuntimeError, "auth state is missing"):
-            runtime.prepare(21, task={"task_id": 21})
 
     def test_prepare_rejects_login_redirect(self):
         def browser(args, check=True):
@@ -102,11 +127,15 @@ class RuntimeTests(unittest.TestCase):
                     json.dumps({"data": "http://shop/customer/account/login"}),
                     "",
                 )
+            if args[:1] == ["open"] and str(args[-1]).endswith("/customer/account"):
+                return subprocess.CompletedProcess(args, 0, "{}", "")
             return subprocess.CompletedProcess(args, 0, "{}", "")
 
         with mock.patch.object(runtime, "reset_site"), mock.patch.object(
             runtime, "SHOPPING_URL", "http://shop"
-        ), mock.patch.object(runtime, "browser", side_effect=browser):
+        ), mock.patch.object(runtime, "browser", side_effect=browser        ), mock.patch.object(
+            runtime, "kill_browser_daemons", create=True
+        ):
             with self.assertRaisesRegex(RuntimeError, "authenticated state is not logged in"):
                 runtime.prepare(
                     21,
@@ -133,29 +162,30 @@ class RuntimeTests(unittest.TestCase):
             capture_output=True,
         )
 
-    def test_capture_stop_requires_valid_har(self):
+    def test_capture_stop_invalid_har_is_ignored(self):
         def write_invalid(_args, **_kwargs):
             runtime.HAR_PATH.parent.mkdir(parents=True, exist_ok=True)
             runtime.HAR_PATH.write_text("not json")
             return subprocess.CompletedProcess([], 0, "{}", "")
 
         with mock.patch.object(runtime, "browser", side_effect=write_invalid):
-            with self.assertRaisesRegex(RuntimeError, "network.har is invalid JSON"):
-                runtime.capture_stop()
+            self.assertIsNone(runtime.capture_stop())
+        self.assertFalse(runtime.HAR_PATH.is_file())
 
-    def test_capture_stop_requires_har_file(self):
+    def test_capture_stop_missing_har_is_ignored(self):
         ok = subprocess.CompletedProcess([], 0, "{}", "")
         with mock.patch.object(runtime, "browser", return_value=ok):
-            with self.assertRaisesRegex(RuntimeError, "network.har is missing"):
-                runtime.capture_stop()
+            self.assertIsNone(runtime.capture_stop())
 
-    def test_capture_stop_explains_browser_close(self):
-        closed = subprocess.CompletedProcess(
-            [], 1, "", "session is closed"
+    def test_capture_stop_busy_daemon_does_not_raise(self):
+        busy = subprocess.CompletedProcess(
+            [],
+            1,
+            "",
+            '{"error":"Failed to read: Resource temporarily unavailable (os error 11) (after 5 retries - daemon may be busy or unresponsive)","success":false}',
         )
-        with mock.patch.object(runtime, "browser", return_value=closed):
-            with self.assertRaisesRegex(RuntimeError, "do not close the browser"):
-                runtime.capture_stop()
+        with mock.patch.object(runtime, "browser", return_value=busy):
+            self.assertIsNone(runtime.capture_stop())
 
     def test_capture_stop_saves_and_returns_har(self):
         har = {"log": {"entries": []}}
@@ -218,6 +248,57 @@ class RuntimeTests(unittest.TestCase):
             {"agent_browser_commands": 1.0}, runtime.trajectory_metrics()
         )
 
+    def test_trajectory_metrics_count_pi_bash_agent_browser_when_trajectory_missing(self):
+        runtime.PI_LOG_PATH.parent.mkdir(parents=True)
+        runtime.PI_LOG_PATH.write_text(
+            "\n".join(
+                [
+                    json.dumps(
+                        {
+                            "type": "tool_execution_start",
+                            "toolName": "bash",
+                            "args": {
+                                "command": (
+                                    "export AGENT_BROWSER_SESSION="
+                                    '"$(agent-browser session id)"; '
+                                    "agent-browser open 'http://shop/item'"
+                                )
+                            },
+                        }
+                    ),
+                    json.dumps(
+                        {
+                            "type": "tool_execution_end",
+                            "toolName": "bash",
+                            "args": {
+                                "command": "agent-browser snapshot -i"
+                            },
+                        }
+                    ),
+                    json.dumps(
+                        {
+                            "type": "tool_execution_start",
+                            "toolName": "bash",
+                            "args": {"command": "agent-browser click @e10"},
+                        }
+                    ),
+                    json.dumps(
+                        {
+                            "type": "tool_execution_start",
+                            "toolName": "bash",
+                            "args": {"command": "ls /app"},
+                        }
+                    ),
+                    "{not json",
+                ]
+            )
+            + "\n"
+        )
+
+        self.assertEqual(
+            {"agent_browser_commands": 2.0}, runtime.trajectory_metrics()
+        )
+
     def test_evaluate_writes_reward_and_metrics(self):
         runtime.RESPONSE_PATH.parent.mkdir(parents=True)
         runtime.RESPONSE_PATH.write_text('{"answer": "done"}')
@@ -249,10 +330,41 @@ class RuntimeTests(unittest.TestCase):
             network_trace=runtime.HAR_PATH,
         )
 
-    def test_missing_response_is_infrastructure_error(self):
-        missing_path = runtime.APP / "missing-agent-response.json"
-        with self.assertRaisesRegex(RuntimeError, "agent_response.json is missing"):
-            runtime.evaluate(21, evaluator=mock.Mock(), response_path=missing_path)
+    def test_missing_response_scores_zero(self):
+        runtime.HAR_PATH.parent.mkdir(parents=True)
+        runtime.HAR_PATH.write_text('{"log": {"entries": []}}')
+        evaluator = mock.Mock()
+
+        reward = runtime.evaluate(
+            21,
+            evaluator=evaluator,
+            metrics={"unique_urls": 4.0, "agent_browser_commands": 7.0},
+        )
+
+        self.assertEqual(
+            {
+                "reward": 0.0,
+                "unique_urls": 4.0,
+                "agent_browser_commands": 7.0,
+            },
+            reward,
+        )
+        self.assertEqual(reward, json.loads(runtime.REWARD_PATH.read_text()))
+        evaluator.evaluate_task.assert_not_called()
+
+    def test_missing_har_scores_zero(self):
+        runtime.RESPONSE_PATH.parent.mkdir(parents=True)
+        runtime.RESPONSE_PATH.write_text('{"status": "SUCCESS"}')
+        evaluator = mock.Mock()
+
+        reward = runtime.evaluate(21, evaluator=evaluator)
+
+        self.assertEqual(
+            {"reward": 0.0, "unique_urls": 0.0, "agent_browser_commands": 0.0},
+            reward,
+        )
+        self.assertEqual(reward, json.loads(runtime.REWARD_PATH.read_text()))
+        evaluator.evaluate_task.assert_not_called()
 
     def test_evaluator_error_propagates(self):
         runtime.RESPONSE_PATH.parent.mkdir(parents=True)

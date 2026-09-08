@@ -8,6 +8,7 @@ RUN apt-get update \
         chromium \
         fonts-liberation \
         util-linux \
+        procps \
     && rm -rf /var/lib/apt/lists/* \
     && useradd -m -s /bin/bash agent
 
@@ -18,7 +19,7 @@ ENV AGENT_BROWSER_SESSION=webarena-shopping
 RUN pip3 install --break-system-packages --no-cache-dir 'webarena-verified==1.2.3' \
     && npm install -g 'agent-browser@0.36.0'
 
-RUN mkdir -p /app/sessions /opt/webarena /logs/agent /logs/verifier \
+RUN mkdir -p /app /opt/webarena /logs/agent /logs/verifier \
         /home/agent/.agents/skills \
     && cp -R "$(npm root -g)/agent-browser/skills/agent-browser" \
        /home/agent/.agents/skills/agent-browser \
@@ -39,12 +40,8 @@ RUN test -f /opt/webarena/webarena-verified.json \
     && chmod 750 /opt/webarena \
     && chmod 755 /opt/webarena/runtime.py \
     && chmod 644 /opt/webarena/agent-input.json \
-    && chmod 600 /opt/webarena/dataset.json \
-    && if [ -f /opt/webarena/auth.json ]; then \
-         chgrp agent /opt/webarena/auth.json; chmod 640 /opt/webarena/auth.json; \
-       fi
+    && chmod 600 /opt/webarena/dataset.json
 
 ENV WEBARENA_SHOPPING_URL=http://host.docker.internal:7770
 ENV WEBARENA_CONTROL_URL=http://host.docker.internal:7772
-ENV WEBARENA_AUTH_STATE=/opt/webarena/auth.json
 WORKDIR /app
