@@ -1,21 +1,15 @@
-# Kestrel Depot
+# WebArena Shopping
 
-The environment has one company intranet. Browse it with:
+Read `/app/task.json`. Complete its `intent` on its `start_urls` using the installed `agent-browser` skill and CLI. Shape `retrieved_data` as a list according to the task `results_schema`, or use `null` when there is nothing to return.
 
-```text
-web get <path>
-web post <path> field=value ...
-```
+Read `/app/notes.md` when useful. Update it with reusable knowledge about the Shopping site, not task-specific answers.
 
-The home page is `/`. Pages return HTML. Follow the links.
+Do not close the browser or stop HAR capture. The verifier stops capture after you finish.
 
-Read `/app/question.md`. Do the job. Write the result to `/app/answer.json`:
+Write `/app/agent_response.json`:
 
 ```json
-{ "answer": "..." }
+{"task_type":"retrieve","status":"SUCCESS","retrieved_data":null,"error_details":null}
 ```
 
-Use a short string. For a form job, write the confirmation code that the site returns.
-Quote values that contain spaces. Keep notes in `/app/notes.md` if useful. Past session logs are under `/app/sessions/`.
-
-Stop after writing `/app/answer.json`.
+`task_type` is `retrieve`, `navigate`, or `mutate`. `status` must be `SUCCESS`, `NOT_FOUND_ERROR`, or `ACTION_NOT_ALLOWED_ERROR`. Put a short reason in `error_details` when status is not `SUCCESS`. Stop after writing the response.

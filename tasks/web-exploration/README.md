@@ -1,84 +1,74 @@
 # Web exploration
 
-Evaluate how an agent learns one frozen company intranet (Kestrel Depot, 30 jobs).
+Evaluate Harbor `pi` on all 187 Shopping-only tasks from the pinned
+[WebArena-Verified](https://github.com/ServiceNow/webarena-verified) dataset.
+The benchmark uses the official WebArena Shopping service, not a bundled mock.
 
-The site is fictional. A model cannot answer from training memory. Jobs mix
-fact questions and form posts. Harbor cannot run a slice of one task: `--n`
-sets how many steps `generate_steps.py` writes.
+This task runs the **baseline** agent only (`pi`, fresh chat each step).
 
-Needs `OPENAI_API_KEY`. Use the OpenAI id `gpt-5.6-luna` (dot, not hyphen).
+## Prerequisites
 
-## Build steps
+- Docker Desktop with the `docker` CLI on `PATH` (or `~/.docker/bin/docker`)
+- Enough free disk for the 17.8 GB Shopping image
+- [Harbor](https://www.harborframework.com/docs)
+- `OPENAI_API_KEY`
+- On the host, `host.docker.internal` must resolve to this machine so Magento
+  and the Harbor container share one origin. If
+  `python3 -c 'import socket; print(socket.gethostbyname("host.docker.internal"))'`
+  fails, add `127.0.0.1 host.docker.internal` to `/etc/hosts`.
 
-From the repo root:
+Use the OpenAI model id `gpt-5.6-luna` (dot, not hyphen).
 
-```bash
-python3 tasks/web-exploration/generate_steps.py --n 10   # smoke
-python3 tasks/web-exploration/generate_steps.py --all    # all 30
-```
+Paste each command as a single line. A line break turns the next flag into a
+zsh command, for example `zsh: command not found: --agent-timeout-multiplier`.
 
-`steps/` and `task.toml` are generated. They are gitignored.
+## Entire setup
 
-The agent browses with `web get <path>` and `web post <path> field=value ...`.
-The CLI returns HTML. Gold facts and form checks stay under `/opt/web` (mode 600).
-
-Each step is scored by a programmatic check. A question step matches the gold
-string. A form step matches the posted fields and the confirmation code. The
-verifier also records `pages_visited` and `tokens` from the agent trajectory.
-
-Oracle writes the gold text for questions. For forms, Oracle posts the fields
-and writes the confirmation code. A passing oracle run shows the verifier is
-wired.
-
-The last 3 jobs of `--all` (jobs 28-30) are a holdout tail. Same site, facts
-that live only on News posts. A mapper should still find them. A notes file
-that only stores prior answers should not.
-
-## Environment
-
-- Base image: `ubuntu:24.04` + `python3` + `sudo`
-- Network: `public` (so agents can call the model API)
-- Agent timeout: 180s per job (raise with `--agent-timeout-multiplier` for pi)
-- Engine: [`environment/web/web.py`](environment/web/web.py)
-- Site tree: [`environment/web/pages.py`](environment/web/pages.py) (hidden)
-- `/app/sessions/`: empty at image build; filled by [pi-sessions](../../agents/pi_sessions/) on each turn shutdown
-
-## Layout
-
-```
-tasks/web-exploration/
-├── instruction.md
-├── questions.json
-├── generate_steps.py
-├── environment/
-│   ├── Dockerfile
-│   └── web/
-│       ├── web.py      # get/post/publish/costs
-│       └── pages.py    # hidden page tree
-├── tests/
-│   ├── test.sh
-│   ├── reward.toml
-│   └── correctness/check.py
-└── steps/              # generated
-```
-
-## Baseline
-
-Harbor `pi`. Fresh chat each job.
+Keep the broker running in one terminal. Harbor runs in another.
 
 ```bash
-harbor run -p tasks/web-exploration -a pi -m openai/gpt-5.6-luna \
-  --agent-timeout-multiplier 5 \
-  --job-name web-baseline
+python3 tasks/web-exploration/reset_broker.py
 ```
 
-## In-context learning
-
-Same `pi`, with `--resume-trajectory`. Prior jobs stay in the model context.
+First time only, wait until Shopping is healthy:
 
 ```bash
-harbor run -p tasks/web-exploration -a pi -m openai/gpt-5.6-luna \
-  --agent-timeout-multiplier 5 \
-  --resume-trajectory \
-  --job-name web-icl
+curl -X POST http://localhost:7772/reset
+curl http://localhost:7772/status
 ```
+
+Then download the dataset once:
+
+```bash
+./tasks/web-exploration/download.sh
+```
+
+Smoke is three tasks to check the image. Full is the 187-task run. Pick one.
+If you smoke first, regenerate all 187 steps before full.
+
+### Three-task smoke (optional)
+
+```bash
+python3 tasks/web-exploration/generate_steps.py --n 3
+harbor run -p tasks/web-exploration -a pi -m openai/gpt-5.6-luna --agent-timeout-multiplier 5 --job-name webarena-shopping-baseline-smoke-3
+```
+
+### All 187 tasks
+
+```bash
+python3 tasks/web-exploration/generate_steps.py
+harbor run -p tasks/web-exploration -a pi -m openai/gpt-5.6-luna --agent-timeout-multiplier 5 --job-name webarena-shopping-baseline-full-v2
+```
+
+Each Harbor step recreates Magento, then logs in after each reset as the
+official WebArena shopping customer. Do not generate cookie files; Magento
+login state does not survive reset.
+
+Shopping is served at `http://host.docker.internal:7770` (port `7770` on the
+host). Env-ctrl stays on `7771` for the broker's health checks. Harbor task
+containers call the broker at `http://host.docker.internal:7772`. The first
+reset downloads the Shopping image and can take several minutes.
+
+The benchmark image installs the `agent-browser` skill and CLI. The agent
+uses it to operate Shopping. The verifier scores the response and HAR with
+WebArena-Verified.

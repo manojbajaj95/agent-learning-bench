@@ -1,32 +1,47 @@
-FROM ubuntu:24.04
+FROM node:24-bookworm-slim
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3 sudo \
+    && apt-get install -y --no-install-recommends \
+        python3 \
+        python3-pip \
+        ca-certificates \
+        chromium \
+        fonts-liberation \
+        util-linux \
+        procps \
     && rm -rf /var/lib/apt/lists/* \
     && useradd -m -s /bin/bash agent
 
-COPY --from=ghcr.io/astral-sh/uv:0.9.7 /uv /usr/local/bin/uv
-ENV UV_BREAK_SYSTEM_PACKAGES=1
-RUN uv pip install --python /usr/bin/python3 --system 'harbor-rewardkit==0.1.*'
+ENV HOME=/home/agent
+ENV AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV AGENT_BROWSER_SESSION=webarena-shopping
 
-COPY web/ /opt/web/
-COPY data/questions.json /opt/web/questions.json
-COPY data/gold.json /opt/web/gold.json
+RUN pip3 install --break-system-packages --no-cache-dir 'webarena-verified==1.2.3' \
+    && npm install -g 'agent-browser@0.36.0'
 
-RUN chmod 755 /opt/web/web.py \
-    && chmod 600 /opt/web/pages.py /opt/web/gold.json \
-    && chmod 644 /opt/web/questions.json \
-    && mkdir -p /opt/web/state \
-    && chmod 700 /opt/web/state \
-    && printf '%s\n' '#!/bin/sh' 'cmd=$1; shift' \
-       'exec sudo -n /usr/bin/python3 /opt/web/web.py "$cmd" "$@"' \
-       > /usr/local/bin/web \
-    && chmod 755 /usr/local/bin/web \
-    && printf '%s\n' \
-       'agent ALL=(root) NOPASSWD: /usr/bin/python3 /opt/web/web.py get *, /usr/bin/python3 /opt/web/web.py post *' \
-       > /etc/sudoers.d/web \
-    && chmod 440 /etc/sudoers.d/web \
-    && mkdir -p /app/sessions \
-    && chown -R agent:agent /app
+RUN mkdir -p /app /opt/webarena /logs/agent /logs/verifier \
+        /home/agent/.agents/skills \
+    && cp -R "$(npm root -g)/agent-browser/skills/agent-browser" \
+       /home/agent/.agents/skills/agent-browser \
+    && printf '%s\n' '{"args":["--no-sandbox","--disable-dev-shm-usage"]}' \
+       > /home/agent/agent-browser.json \
+    && touch /app/notes.md
 
+COPY webarena/runtime.py /opt/webarena/runtime.py
+COPY data/ /opt/webarena/
+
+RUN test -f /opt/webarena/webarena-verified.json \
+    && test -f /opt/webarena/agent-input.json \
+    && mv /opt/webarena/webarena-verified.json /opt/webarena/dataset.json \
+    && chown -R root:root /opt/webarena /logs/verifier \
+    && chown -R agent:agent /app /logs/agent /home/agent \
+    && chmod -R a-w /home/agent/.agents/skills/agent-browser \
+    && chgrp agent /opt/webarena \
+    && chmod 750 /opt/webarena \
+    && chmod 755 /opt/webarena/runtime.py \
+    && chmod 644 /opt/webarena/agent-input.json \
+    && chmod 600 /opt/webarena/dataset.json
+
+ENV WEBARENA_SHOPPING_URL=http://host.docker.internal:7770
+ENV WEBARENA_CONTROL_URL=http://host.docker.internal:7772
 WORKDIR /app
