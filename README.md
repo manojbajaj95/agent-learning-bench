@@ -95,7 +95,7 @@ These tasks can test policy or ontology induction, but they need strong controls
 
 This design is still under study. We will not treat a semi-verifiable task as a benchmark result until its feedback and holdout design can separate generalization from memory replay.
 
-Examples: Expense Desk and Data Lake without an in-step grader.
+Example: a Data Lake task without an in-step grader.
 
 #### Non-verifiable tasks
 
@@ -139,7 +139,6 @@ task designs or early concepts.
 | [Affinity Arena](tasks/affinity-arena/) | Verifiable | Runnable | A hidden affinity chart across twenty battles |
 | [Report check](tasks/report-check/) | Verifiable | Runnable | An unpublished house style guide, learned from review comments |
 | [Courier / Picker](tasks/courier-picker/) | Verifiable | Design | A fixed spatial map |
-| [Expense Desk](tasks/expense-desk/) | Semi-verifiable | Design, blocked by feedback study | An unwritten expense policy |
 | [Corpus](tasks/corpus/) | Non-verifiable | Runnable | A frozen Confluence wiki map |
 | [Codebase Q&A](tasks/codebase-qa/) | Non-verifiable | Runnable | Flask hierarchy and call patterns |
 | [Database analytics](tasks/database-analytics/) | Non-verifiable | Runnable | Formula 1 schema and query patterns |
@@ -147,7 +146,7 @@ task designs or early concepts.
 
 Download the Formula 1 database before you run Database analytics. See [`tasks/database-analytics/README.md`](tasks/database-analytics/README.md). Download Flask before you run Codebase Q&A. See [`tasks/codebase-qa/README.md`](tasks/codebase-qa/README.md). Download the Confluence wiki before you run Corpus. See [`tasks/corpus/README.md`](tasks/corpus/README.md). Before you run Web exploration, start the official external WebArena-Verified Shopping service, create its authentication state, and generate the 187 Shopping-only tasks. See [`tasks/web-exploration/README.md`](tasks/web-exploration/README.md).
 
-Tally proves the Harbor multi-step setup, persistent workspace, per-step rewards, and run reporting. Report check is a house-style review loop with capped submissions. Affinity Arena is a sequence of creature battles against a hidden affinity chart, with a holdout roster. Database analytics, Codebase Q&A, and Corpus add a Reward Kit verifier and baseline vs `--resume-trajectory` runs. Web exploration runs the same learning conditions over the official WebArena-Verified Shopping service through `agent-browser`. Courier / Picker and Expense Desk currently document the intended task design but do not yet include runnable environments or verifiers.
+Tally proves the Harbor multi-step setup, persistent workspace, per-step rewards, and run reporting. Report check is a house-style review loop with capped submissions. Affinity Arena is a sequence of creature battles against a hidden affinity chart, with a holdout roster. Database analytics, Codebase Q&A, and Corpus add a Reward Kit verifier and baseline vs `--resume-trajectory` runs. Web exploration runs the same learning conditions over the official WebArena-Verified Shopping service through `agent-browser`. Courier / Picker currently documents the intended task design but does not yet include a runnable environment or verifier.
 
 ## Contributing a task
 
