@@ -1,8 +1,7 @@
 # Expense Desk
 
 Expense Desk is a proposed Harbor multi-step task for learning an unwritten
-expense policy. It follows the design in
-[`docs/task-ideas.md`](../../docs/task-ideas.md#3-expense-desk--unwritten-policy-induction-domain-3).
+expense policy.
 This directory contains the design only. It is not yet a runnable Harbor task.
 
 ## Goal

@@ -21,5 +21,4 @@ tasks/web-exploration/environment/data/
 tasks/web-exploration/environment/web/state/
 tasks/web-exploration/steps/
 tasks/web-exploration/task.toml
-
-docs/*
+docs/

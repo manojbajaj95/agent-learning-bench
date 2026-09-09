@@ -1,9 +1,7 @@
 # Courier / Picker
 
 Courier / Picker is a proposed Harbor multi-step task for spatial map learning.
-It is a Domain 1 task: movement gives immediate and verifiable feedback. The
-design comes from
-[`docs/task-ideas.md`](../../docs/task-ideas.md#4-courier--picker--spatial-map-learning-domain-1).
+It is a Domain 1 task: movement gives immediate and verifiable feedback.
 This directory contains the design only. It is not yet a runnable Harbor task.
 
 ## Goal

@@ -81,11 +81,11 @@ The timing and visibility of feedback define three task domains.
 
 #### Verifiable tasks
 
-The agent can observe correctness during the step. A wall blocks movement, a boss responds to an attack, or a grader checks a candidate answer. The agent can react before it commits its final result.
+The agent can observe correctness during the step. A wall blocks movement, an opponent responds to an attack, or a grader checks a candidate answer. The agent can react before it commits its final result.
 
 These tasks test learning from direct interaction. If the environment offers a grader, task authors must cap or penalize calls so that brute-force search does not replace learning.
 
-Examples: Warden and Courier / Picker.
+Examples: Affinity Arena and Courier / Picker.
 
 #### Semi-verifiable tasks
 
@@ -127,18 +127,16 @@ Each task also needs these controls:
 
 A good task has one clear learning object, a measurable improvement curve, enough steps to show a trend, and a holdout that tests transfer. It should not install the solution, reveal hidden state, or use a final aggregate score as its only result.
 
-More detail is in [`docs/task-ideas.md`](docs/task-ideas.md).
-
 ## Tasks
 
-Tally, Report check, Database analytics, Codebase Q&A, Corpus, and Web
-exploration are runnable. Warden v1 runs, but the task is still **in
-progress**. The other folders contain task designs or early concepts.
+Tally, Report check, Affinity Arena, Database analytics, Codebase Q&A,
+Corpus, and Web exploration are runnable. The other folders contain
+task designs or early concepts.
 
 | Task | Domain | Status | Learning object |
 |---|---|---|---|
 | [Tally](tasks/tally/) | Verifiable | Runnable sample | Card counts across twelve turns |
-| [Warden](tasks/warden/) | Verifiable | In progress | A hidden boss policy, learned from repeated deaths |
+| [Affinity Arena](tasks/affinity-arena/) | Verifiable | Runnable | A hidden affinity chart across twenty battles |
 | [Report check](tasks/report-check/) | Verifiable | Runnable | An unpublished house style guide, learned from review comments |
 | [Courier / Picker](tasks/courier-picker/) | Verifiable | Design | A fixed spatial map |
 | [Expense Desk](tasks/expense-desk/) | Semi-verifiable | Design, blocked by feedback study | An unwritten expense policy |
@@ -149,7 +147,7 @@ progress**. The other folders contain task designs or early concepts.
 
 Download the Formula 1 database before you run Database analytics. See [`tasks/database-analytics/README.md`](tasks/database-analytics/README.md). Download Flask before you run Codebase Q&A. See [`tasks/codebase-qa/README.md`](tasks/codebase-qa/README.md). Download the Confluence wiki before you run Corpus. See [`tasks/corpus/README.md`](tasks/corpus/README.md). Before you run Web exploration, start the official external WebArena-Verified Shopping service, create its authentication state, and generate the 187 Shopping-only tasks. See [`tasks/web-exploration/README.md`](tasks/web-exploration/README.md).
 
-Tally proves the Harbor multi-step setup, persistent workspace, per-step rewards, and run reporting. Report check is a house-style review loop with capped submissions. Warden v1 is a looping hidden-policy fight with live CLI feedback and a Pygame replay. It is in progress: the current boss is too easy to read, so later work must make the same fight harder. Database analytics, Codebase Q&A, and Corpus add a Reward Kit verifier and baseline vs `--resume-trajectory` runs. Web exploration runs the same learning conditions over the official WebArena-Verified Shopping service through `agent-browser`. Courier / Picker and Expense Desk currently document the intended task design but do not yet include runnable environments or verifiers.
+Tally proves the Harbor multi-step setup, persistent workspace, per-step rewards, and run reporting. Report check is a house-style review loop with capped submissions. Affinity Arena is a sequence of creature battles against a hidden affinity chart, with a holdout roster. Database analytics, Codebase Q&A, and Corpus add a Reward Kit verifier and baseline vs `--resume-trajectory` runs. Web exploration runs the same learning conditions over the official WebArena-Verified Shopping service through `agent-browser`. Courier / Picker and Expense Desk currently document the intended task design but do not yet include runnable environments or verifiers.
 
 ## Contributing a task
 
