@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Reset Shopping and manage the per-step agent-browser session."""
+"""Reset Shopping and manage the per-step webcmd session."""
 
 from __future__ import annotations
 
 import json
 import os
+import re
 import shlex
+import signal
 import subprocess
 import sys
 import time
@@ -20,7 +22,8 @@ SHOPPING_URL = os.environ.get(
 CONTROL_URL = os.environ.get(
     "WEBARENA_CONTROL_URL", "http://host.docker.internal:7772"
 ).rstrip("/")
-SESSION = os.environ.get("AGENT_BROWSER_SESSION", "webarena-shopping")
+PROFILE = os.environ.get("WEBCMD_PROFILE", "webarena")
+SESSION_NAME = os.environ.get("WEBCMD_SESSION_NAME", "shopping")
 REQUEST_TIMEOUT_SEC = int(os.environ.get("WEBARENA_REQUEST_TIMEOUT_SEC", "30"))
 RESET_TIMEOUT_SEC = int(os.environ.get("WEBARENA_RESET_TIMEOUT_SEC", "600"))
 LOGIN_WAIT_SEC = int(os.environ.get("WEBARENA_LOGIN_WAIT_SEC", "30"))
@@ -31,15 +34,23 @@ SHOPPING_PASSWORD = os.environ.get("WEBARENA_SHOPPING_PASSWORD", "Password.123")
 HEALTH_PATH = "/customer/account/login"
 ACCOUNT_PATH = "/customer/account"
 DATASET_PATH = Path("/opt/webarena/dataset.json")
+HAR_RECORDER = Path(
+    os.environ.get("WEBARENA_HAR_RECORDER", "/opt/webarena/har_recorder.mjs")
+)
 
 APP = Path("/app")
 TASK_PATH = APP / "task.json"
 RESPONSE_PATH = APP / "agent_response.json"
+SESSION_PATH = APP / "webcmd-session"
 INPUT_PATH = Path("/opt/webarena/agent-input.json")
 HAR_PATH = Path("/logs/agent/network.har")
+JSONL_PATH = Path("/logs/agent/network.jsonl")
+PID_PATH = Path("/logs/agent/har-recorder.pid")
 TRAJECTORY_PATH = Path("/logs/agent/trajectory.json")
 PI_LOG_PATH = Path("/logs/agent/pi.txt")
 REWARD_PATH = Path("/logs/verifier/reward.json")
+WEBCMD_HOME = Path(os.environ.get("HOME", "/home/agent")) / ".webcmd"
+CDP_PORT = int(os.environ.get("WEBARENA_CDP_PORT", "9222"))
 
 
 def require_http_ok(
@@ -91,18 +102,28 @@ def reset_site() -> None:
     raise RuntimeError("Shopping reset failed health check")
 
 
-def browser(
-    args: list[str], check: bool = True
+def run_webcmd(
+    args: list[str],
+    session: str | None = None,
+    check: bool = True,
+    stdin: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
+    cmd = ["webcmd"]
+    if PROFILE:
+        cmd += ["--profile", PROFILE]
+    if session:
+        cmd += ["--session", session]
+    cmd += args
     result = subprocess.run(
-        ["agent-browser", "--session", SESSION, "--json", *args],
+        cmd,
         check=False,
         text=True,
         capture_output=True,
+        input=stdin,
     )
     if check and result.returncode != 0:
         detail = (result.stderr or result.stdout or "").strip()
-        raise RuntimeError(f"agent-browser {' '.join(args)} failed: {detail}")
+        raise RuntimeError(f"webcmd {' '.join(args)} failed: {detail}")
     return result
 
 
@@ -122,7 +143,17 @@ def render_task(task: dict) -> dict:
     return rendered
 
 
-def parse_browser_url(stdout: str) -> str:
+def parse_session_id(stdout: str) -> str:
+    try:
+        data = json.loads(stdout)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"webcmd session id missing: {stdout}") from exc
+    if isinstance(data, dict) and data.get("id"):
+        return str(data["id"])
+    raise RuntimeError(f"webcmd session id missing: {stdout}")
+
+
+def parse_run_url(stdout: str) -> str:
     try:
         data = json.loads(stdout)
     except json.JSONDecodeError:
@@ -130,19 +161,34 @@ def parse_browser_url(stdout: str) -> str:
     if isinstance(data, str):
         return data
     if isinstance(data, dict):
-        value = data.get("data", data.get("url", data.get("result", "")))
+        value = data.get("result", data.get("url", data.get("page", "")))
         if isinstance(value, dict):
             value = value.get("url", "")
         return str(value)
     return stdout.strip()
 
 
-def require_authenticated() -> None:
+def browser_run(
+    session_id: str, source: str, check: bool = True
+) -> subprocess.CompletedProcess[str]:
+    return run_webcmd(
+        ["browser", "run", "--stdin", "--no-snapshot-diff"],
+        session=session_id,
+        check=check,
+        stdin=source,
+    )
+
+
+def require_authenticated(session_id: str) -> None:
     deadline = time.monotonic() + LOGIN_WAIT_SEC
+    source = (
+        f"await page.goto('{SHOPPING_URL}{ACCOUNT_PATH}');\n"
+        "return { url: page.url() };\n"
+    )
     while True:
-        opened = browser(["open", f"{SHOPPING_URL}{ACCOUNT_PATH}"], check=False)
+        opened = browser_run(session_id, source, check=False)
         if opened.returncode == 0:
-            url = parse_browser_url(browser(["get", "url"], check=False).stdout or "")
+            url = parse_run_url(opened.stdout or "")
             if url and "login" not in urlsplit(url).path.lower():
                 return
         if time.monotonic() >= deadline:
@@ -150,20 +196,123 @@ def require_authenticated() -> None:
         time.sleep(1)
 
 
-def login() -> None:
-    browser(["open", f"{SHOPPING_URL}{HEALTH_PATH}"])
-    browser(["fill", "#email", SHOPPING_EMAIL])
-    browser(["fill", "#pass", SHOPPING_PASSWORD])
-    browser(["click", "#send2"])
-    browser(["wait", "2000"])
+def login(session_id: str) -> None:
+    browser_run(
+        session_id,
+        (
+            f"await page.goto('{SHOPPING_URL}{HEALTH_PATH}');\n"
+            f"await page.locator('#email').first().fill('{SHOPPING_EMAIL}');\n"
+            f"await page.locator('#pass').first().fill('{SHOPPING_PASSWORD}');\n"
+            "await page.locator('#send2').first().click();\n"
+            "await page.waitForTimeout(2000);\n"
+            "return { url: page.url() };\n"
+        ),
+    )
 
 
-def kill_browser_daemons() -> None:
+def create_session() -> str:
+    run_webcmd(["profile", "create", PROFILE], check=False)
+    return parse_session_id(
+        run_webcmd(["session", "create", SESSION_NAME, "-f", "json"]).stdout
+    )
+
+
+def launch_session(attempts: int = 3) -> str:
+    last: Exception | None = None
+    for attempt in range(attempts):
+        try:
+            return create_session()
+        except RuntimeError as exc:
+            last = exc
+            if attempt + 1 == attempts:
+                raise
+            time.sleep(1)
+    raise last or RuntimeError("webcmd session create failed")
+
+
+def cdp_ready(endpoint: str) -> bool:
+    try:
+        with urlopen(Request(f"{endpoint}/json/version"), timeout=1) as response:
+            return 200 <= response.status < 300
+    except (OSError, HTTPError, URLError):
+        return False
+
+
+def cdp_ports_from_ps() -> list[int]:
+    try:
+        output = subprocess.check_output(["ps", "-axo", "command="], text=True)
+    except (OSError, subprocess.CalledProcessError):
+        return []
+    ports: list[int] = []
+    for line in output.splitlines():
+        if "--type=" in line:
+            continue
+        match = re.search(r"--remote-debugging-port=(\d+)", line)
+        if match:
+            ports.append(int(match.group(1)))
+    return ports
+
+
+def find_cdp_endpoint(root: Path | None = None) -> str | None:
+    root = root or WEBCMD_HOME
+    if root.is_dir():
+        for port_file in root.rglob("DevToolsActivePort"):
+            try:
+                port = int(port_file.read_text().splitlines()[0])
+            except (OSError, ValueError, IndexError):
+                continue
+            if port > 0:
+                return f"http://127.0.0.1:{port}"
+    for port in cdp_ports_from_ps():
+        if port > 0:
+            return f"http://127.0.0.1:{port}"
+    return f"http://127.0.0.1:{CDP_PORT}"
+
+
+def wait_for_cdp() -> str:
+    deadline = time.monotonic() + max(LOGIN_WAIT_SEC, 30)
+    while True:
+        endpoint = find_cdp_endpoint()
+        if endpoint and cdp_ready(endpoint):
+            return endpoint
+        if time.monotonic() >= deadline:
+            raise RuntimeError("CDP endpoint is missing")
+        time.sleep(0.5)
+
+
+def stop_har_recorder() -> None:
+    if not PID_PATH.is_file():
+        return
+    try:
+        os.kill(int(PID_PATH.read_text().strip()), signal.SIGTERM)
+    except (OSError, ValueError):
+        pass
+    PID_PATH.unlink(missing_ok=True)
+
+
+def start_har_recorder() -> None:
+    endpoint = wait_for_cdp()
+    JSONL_PATH.parent.mkdir(parents=True, exist_ok=True)
+    JSONL_PATH.unlink(missing_ok=True)
+    proc = subprocess.Popen(
+        ["node", str(HAR_RECORDER), endpoint, str(JSONL_PATH)],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+    PID_PATH.parent.mkdir(parents=True, exist_ok=True)
+    PID_PATH.write_text(str(proc.pid))
+
+
+def stop_browser() -> None:
+    stop_har_recorder()
+    session = SESSION_PATH.read_text().strip() if SESSION_PATH.is_file() else ""
+    if session:
+        run_webcmd(["session", "close", session, "--force"], check=False)
+    run_webcmd(["daemon", "stop"], check=False)
     try:
         subprocess.run(
-            ["pkill", "-f", "agent-browser-linux"],
-            check=False,
-            capture_output=True,
+            ["pkill", "-f", "chromium"], check=False, capture_output=True
         )
     except FileNotFoundError:
         return
@@ -174,41 +323,93 @@ def prepare(task_id: int, task: dict | None = None) -> None:
     reset_site()
     APP.mkdir(parents=True, exist_ok=True)
     TASK_PATH.write_text(json.dumps(task, indent=2) + "\n")
-    for path in (RESPONSE_PATH, HAR_PATH):
+    for path in (RESPONSE_PATH, HAR_PATH, JSONL_PATH):
         path.unlink(missing_ok=True)
-    browser(["close", "--all"], check=False)
-    kill_browser_daemons()
-    launch_browser()
-    login()
-    require_authenticated()
-    browser(["network", "har", "start", "--content", "text"])
+    stop_browser()
+    session_id = launch_session()
+    SESSION_PATH.write_text(session_id + "\n")
+    login(session_id)
+    require_authenticated(session_id)
+    start_har_recorder()
 
 
-def launch_browser(attempts: int = 3) -> None:
-    last: Exception | None = None
-    for attempt in range(attempts):
-        try:
-            browser(["open"])
-            return
-        except RuntimeError as exc:
-            last = exc
-            if attempt + 1 == attempts:
-                raise
-            time.sleep(1)
-    raise last or RuntimeError("agent-browser open failed")
+def header_list(headers) -> list[dict[str, str]]:
+    if isinstance(headers, list):
+        return [
+            {"name": str(item.get("name", "")), "value": str(item.get("value", ""))}
+            for item in headers
+            if isinstance(item, dict)
+        ]
+    if isinstance(headers, dict):
+        return [{"name": str(name), "value": str(value)} for name, value in headers.items()]
+    return []
+
+
+def events_to_har(events: list[dict]) -> dict:
+    entries = []
+    for event in events:
+        post = event.get("postData") or ""
+        request = {
+            "method": event.get("method") or "GET",
+            "url": event.get("url") or "",
+            "httpVersion": "HTTP/1.1",
+            "cookies": [],
+            "headers": header_list(event.get("headers")),
+            "queryString": [],
+            "headersSize": -1,
+            "bodySize": len(post),
+        }
+        if post:
+            request["postData"] = {
+                "mimeType": "application/x-www-form-urlencoded",
+                "text": post,
+            }
+        entries.append(
+            {
+                "startedDateTime": event.get("startedDateTime")
+                or "1970-01-01T00:00:00.000Z",
+                "time": 0,
+                "request": request,
+                "response": {
+                    "status": int(event.get("status") or 0),
+                    "statusText": event.get("statusText") or "",
+                    "httpVersion": "HTTP/1.1",
+                    "cookies": [],
+                    "headers": [],
+                    "content": {"size": 0, "mimeType": ""},
+                    "redirectURL": "",
+                    "headersSize": -1,
+                    "bodySize": 0,
+                },
+                "cache": {},
+                "timings": {"send": 0, "wait": 0, "receive": 0},
+            }
+        )
+    return {
+        "log": {
+            "version": "1.2",
+            "creator": {"name": "webarena-webcmd", "version": "0"},
+            "entries": entries,
+        }
+    }
 
 
 def capture_stop() -> dict | None:
+    stop_har_recorder()
+    if not JSONL_PATH.is_file():
+        return None
+    events = []
+    for line in JSONL_PATH.read_text().splitlines():
+        if not line.strip():
+            continue
+        try:
+            events.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    har = events_to_har(events)
     HAR_PATH.parent.mkdir(parents=True, exist_ok=True)
-    HAR_PATH.unlink(missing_ok=True)
-    result = browser(["network", "har", "stop", str(HAR_PATH)], check=False)
-    if result.returncode != 0 or not HAR_PATH.is_file():
-        return None
-    try:
-        return json.loads(HAR_PATH.read_text())
-    except json.JSONDecodeError:
-        HAR_PATH.unlink(missing_ok=True)
-        return None
+    HAR_PATH.write_text(json.dumps(har) + "\n")
+    return har
 
 
 def har_metrics(har: dict, shopping_url: str) -> dict[str, float]:
@@ -230,7 +431,7 @@ def command_tokens(item: str) -> list[str]:
 
 
 def uses_agent_browser(command: str) -> bool:
-    return "agent-browser" in command_tokens(command)
+    return "webcmd" in command_tokens(command)
 
 
 def pi_log_metrics(path: Path | None = None) -> dict[str, float]:

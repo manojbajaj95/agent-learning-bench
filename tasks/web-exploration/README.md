@@ -69,6 +69,6 @@ host). Env-ctrl stays on `7771` for the broker's health checks. Harbor task
 containers call the broker at `http://host.docker.internal:7772`. The first
 reset downloads the Shopping image and can take several minutes.
 
-The benchmark image installs the `agent-browser` skill and CLI. The agent
-uses it to operate Shopping. The verifier scores the response and HAR with
-WebArena-Verified.
+The benchmark image installs the `webcmd-browser` skill and `webcmd` CLI. The
+agent uses them to operate Shopping. A CDP sidecar writes the HAR the verifier
+scores with WebArena-Verified.

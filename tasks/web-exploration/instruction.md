@@ -1,10 +1,12 @@
 # WebArena Shopping
 
-Read `/app/task.json`. Complete its `intent` on its `start_urls` using the installed `agent-browser` skill and CLI. Shape `retrieved_data` as a list according to the task `results_schema`, or use `null` when there is nothing to return.
+Read `/app/task.json`. Complete its `intent` on its `start_urls` using the installed `webcmd-browser` skill and `webcmd` CLI. The browser Session ID is in `/app/webcmd-session`. Use that Session. Do not create another Session and do not close it. Emma is already logged in; do not type passwords. Do not run `webcmd site memory` or git.
+
+Shape `retrieved_data` as a list according to the task `results_schema`, or use `null` when there is nothing to return.
 
 Read `/app/notes.md` when useful. Update it with reusable knowledge about the Shopping site, not task-specific answers.
 
-Do not close the browser or stop HAR capture. The verifier stops capture after you finish.
+Do not close the session or stop HAR capture. The verifier stops capture after you finish.
 
 Write `/app/agent_response.json`:
 
