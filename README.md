@@ -82,7 +82,7 @@ During the step, the agent can tell whether an answer or action is correct and c
 
 If the environment has a grader, cap or penalize calls so that brute-force search does not replace learning.
 
-Examples: Tally, Affinity Arena, Report check, and Courier / Picker.
+Examples: Tally, Poker, Affinity Arena, Report check, and Courier / Picker.
 
 ### Non-verifiable
 
@@ -121,6 +121,7 @@ All tasks are runnable except Courier / Picker, which is a design only.
 | Task | Domain | Learning object |
 |---|---|---|
 | [Tally](tasks/tally/) | Verifiable | Card counts across twelve turns |
+| [Poker](tasks/poker/) | Verifiable | A sticky heads-up opponent across 100 hands |
 | [Affinity Arena](tasks/affinity-arena/) | Verifiable | A hidden affinity chart across twenty battles |
 | [Report check](tasks/report-check/) | Verifiable | An unpublished house style guide, learned from review comments |
 | [Courier / Picker](tasks/courier-picker/) | Verifiable | A fixed spatial map (design only) |

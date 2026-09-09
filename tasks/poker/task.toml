@@ -1,0 +1,330 @@
+schema_version = "1.4"
+multi_step_reward_strategy = "final"
+artifacts = ["/app/view.txt", "/app/sessions"]
+
+[task]
+name = "agent-learning-bench/poker"
+version = "0.1.0"
+description = "Heads-up Hold'em against a sticky opponent. Score is chips at the end."
+keywords = ["poker", "multi-step", "learning", "games"]
+
+[metadata]
+difficulty = "hard"
+category = "games"
+seed = 1
+
+[agent]
+user = "agent"
+timeout_sec = 180.0
+
+[verifier]
+user = "root"
+timeout_sec = 30.0
+
+[environment]
+network_mode = "public"
+build_timeout_sec = 600.0
+cpus = 1
+memory_mb = 2048
+storage_mb = 10240
+workdir = "/app"
+
+[[steps]]
+name = "hand-001"
+
+[[steps]]
+name = "hand-002"
+
+[[steps]]
+name = "hand-003"
+
+[[steps]]
+name = "hand-004"
+
+[[steps]]
+name = "hand-005"
+
+[[steps]]
+name = "hand-006"
+
+[[steps]]
+name = "hand-007"
+
+[[steps]]
+name = "hand-008"
+
+[[steps]]
+name = "hand-009"
+
+[[steps]]
+name = "hand-010"
+
+[[steps]]
+name = "hand-011"
+
+[[steps]]
+name = "hand-012"
+
+[[steps]]
+name = "hand-013"
+
+[[steps]]
+name = "hand-014"
+
+[[steps]]
+name = "hand-015"
+
+[[steps]]
+name = "hand-016"
+
+[[steps]]
+name = "hand-017"
+
+[[steps]]
+name = "hand-018"
+
+[[steps]]
+name = "hand-019"
+
+[[steps]]
+name = "hand-020"
+
+[[steps]]
+name = "hand-021"
+
+[[steps]]
+name = "hand-022"
+
+[[steps]]
+name = "hand-023"
+
+[[steps]]
+name = "hand-024"
+
+[[steps]]
+name = "hand-025"
+
+[[steps]]
+name = "hand-026"
+
+[[steps]]
+name = "hand-027"
+
+[[steps]]
+name = "hand-028"
+
+[[steps]]
+name = "hand-029"
+
+[[steps]]
+name = "hand-030"
+
+[[steps]]
+name = "hand-031"
+
+[[steps]]
+name = "hand-032"
+
+[[steps]]
+name = "hand-033"
+
+[[steps]]
+name = "hand-034"
+
+[[steps]]
+name = "hand-035"
+
+[[steps]]
+name = "hand-036"
+
+[[steps]]
+name = "hand-037"
+
+[[steps]]
+name = "hand-038"
+
+[[steps]]
+name = "hand-039"
+
+[[steps]]
+name = "hand-040"
+
+[[steps]]
+name = "hand-041"
+
+[[steps]]
+name = "hand-042"
+
+[[steps]]
+name = "hand-043"
+
+[[steps]]
+name = "hand-044"
+
+[[steps]]
+name = "hand-045"
+
+[[steps]]
+name = "hand-046"
+
+[[steps]]
+name = "hand-047"
+
+[[steps]]
+name = "hand-048"
+
+[[steps]]
+name = "hand-049"
+
+[[steps]]
+name = "hand-050"
+
+[[steps]]
+name = "hand-051"
+
+[[steps]]
+name = "hand-052"
+
+[[steps]]
+name = "hand-053"
+
+[[steps]]
+name = "hand-054"
+
+[[steps]]
+name = "hand-055"
+
+[[steps]]
+name = "hand-056"
+
+[[steps]]
+name = "hand-057"
+
+[[steps]]
+name = "hand-058"
+
+[[steps]]
+name = "hand-059"
+
+[[steps]]
+name = "hand-060"
+
+[[steps]]
+name = "hand-061"
+
+[[steps]]
+name = "hand-062"
+
+[[steps]]
+name = "hand-063"
+
+[[steps]]
+name = "hand-064"
+
+[[steps]]
+name = "hand-065"
+
+[[steps]]
+name = "hand-066"
+
+[[steps]]
+name = "hand-067"
+
+[[steps]]
+name = "hand-068"
+
+[[steps]]
+name = "hand-069"
+
+[[steps]]
+name = "hand-070"
+
+[[steps]]
+name = "hand-071"
+
+[[steps]]
+name = "hand-072"
+
+[[steps]]
+name = "hand-073"
+
+[[steps]]
+name = "hand-074"
+
+[[steps]]
+name = "hand-075"
+
+[[steps]]
+name = "hand-076"
+
+[[steps]]
+name = "hand-077"
+
+[[steps]]
+name = "hand-078"
+
+[[steps]]
+name = "hand-079"
+
+[[steps]]
+name = "hand-080"
+
+[[steps]]
+name = "hand-081"
+
+[[steps]]
+name = "hand-082"
+
+[[steps]]
+name = "hand-083"
+
+[[steps]]
+name = "hand-084"
+
+[[steps]]
+name = "hand-085"
+
+[[steps]]
+name = "hand-086"
+
+[[steps]]
+name = "hand-087"
+
+[[steps]]
+name = "hand-088"
+
+[[steps]]
+name = "hand-089"
+
+[[steps]]
+name = "hand-090"
+
+[[steps]]
+name = "hand-091"
+
+[[steps]]
+name = "hand-092"
+
+[[steps]]
+name = "hand-093"
+
+[[steps]]
+name = "hand-094"
+
+[[steps]]
+name = "hand-095"
+
+[[steps]]
+name = "hand-096"
+
+[[steps]]
+name = "hand-097"
+
+[[steps]]
+name = "hand-098"
+
+[[steps]]
+name = "hand-099"
+
+[[steps]]
+name = "hand-100"
