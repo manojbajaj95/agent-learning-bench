@@ -89,6 +89,7 @@ def test_conversion_preserves_calls_errors_and_metrics_without_duplicates(log):
     assert "503 UNAVAILABLE" in result.steps[2].message
     assert result.extra["skipped_diagnostic_lines"] == 1
     assert result.extra["unresolved_tool_call_ids"] == []
+    assert not result.extra["partial"]
 
 
 @pytest.mark.parametrize("agent_class", [PiTrajectoryAgent, PiSessionsAgent])
@@ -145,7 +146,43 @@ def test_pending_call_remains_visible_on_interruption(tmp_path):
     )
     result = convert_events(source)
     assert result.extra["unresolved_tool_call_ids"] == ["pending"]
+    assert result.extra["partial"]
     assert result.steps[0].observation is None
+
+
+def test_truncated_final_event_exports_valid_prefix_and_preserves_source(log):
+    log.write_text(log.read_text() + '{"type":"message_end","message":')
+    original = log.read_bytes()
+    result = Trajectory.model_validate_json(export_trajectory(log).read_text())
+    assert len(result.steps) == 3
+    assert result.extra["partial"]
+    assert result.extra["truncated_tail_line"] == len(log.read_text().splitlines())
+    assert result.notes.startswith("PARTIAL:")
+    assert log.read_bytes() == original
+
+
+@pytest.mark.parametrize("suffix", ["\n", '\n{"type":"agent_end"}\n'])
+def test_corrupt_complete_or_interior_event_is_not_silently_dropped(log, suffix):
+    log.write_text(log.read_text() + '{"type":' + suffix)
+    with pytest.raises(ValueError, match="malformed Pi event"):
+        export_trajectory(log)
+    assert not log.with_name("trajectory.json").exists()
+
+
+@pytest.mark.parametrize("failure", [ValueError("damaged event"), OSError("disk error")])
+def test_export_failure_cannot_escape_post_run_or_lose_native_usage(
+    log, monkeypatch, caplog, failure
+):
+    def fail(*args, **kwargs):
+        raise failure
+
+    monkeypatch.setattr("affinity_agent.agent.export_trajectory", fail)
+    agent = PiTrajectoryAgent(logs_dir=log.parent, model_name="google/test-model", version="0.85.1")
+    context = AgentContext()
+    agent.populate_context_post_run(context)
+    assert context.n_output_tokens == 5
+    assert context.cost_usd == 0.01
+    assert "Trajectory export failed; native Pi logs preserved" in caplog.text
 
 
 def test_backfill_cli_finds_step_logs(log):
@@ -163,3 +200,58 @@ def test_backfill_cli_finds_step_logs(log):
     assert "Exported:" in first.stdout
     second = subprocess.run(command, capture_output=True, text=True, timeout=30)
     assert second.returncode == 0 and "Kept existing:" in second.stdout
+
+
+@pytest.mark.docker
+@pytest.mark.parametrize("interior", [False, True])
+def test_timeout_and_damaged_export_still_reach_harbor_verifier(tmp_path, interior):
+    import os
+
+    from generate_steps import write_generated
+    from run_no_memory import TASK, isolated_files
+
+    task = tmp_path / "task"
+    write_generated(task, isolated_files(TASK, 1), False)
+    env = dict(os.environ)
+    env["PYTHONPATH"] = os.pathsep.join([str(TASK / "checks"), str(TASK)])
+    proc = subprocess.run(
+        [
+            str(Path(sys.executable).parent / "harbor"),
+            "run",
+            "-p",
+            str(task),
+            "--jobs-dir",
+            str(tmp_path / "jobs"),
+            "--job-name",
+            "export-probe",
+            "-n",
+            "1",
+            "--max-retries",
+            "0",
+            "-a",
+            "resume_probe:ExportProbeAgent",
+            "-m",
+            "google/test-model",
+            "--ak",
+            f"interior={str(interior).lower()}",
+        ],
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=180,
+    )
+    paths = list((tmp_path / "jobs/export-probe").glob("*/result.json"))
+    assert len(paths) == 1, proc.stdout + proc.stderr
+    result = json.loads(paths[0].read_text())
+    assert result["exception_info"] is None
+    step = result["step_results"][0]
+    assert step["exception_info"]["exception_type"] == "AgentTimeoutError"
+    assert step["verifier_result"]["rewards"]["completed"] == 0
+    assert step["verifier_result"]["rewards"]["reward"] == 0
+    agent = paths[0].parent / "steps/battle-01/agent"
+    assert (agent / "pi.txt").is_file()
+    if interior:
+        assert not (agent / "trajectory.json").exists()
+    else:
+        trajectory = json.loads((agent / "trajectory.json").read_text())
+        assert trajectory["extra"]["partial"]

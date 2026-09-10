@@ -14,7 +14,7 @@ from pathlib import Path
 
 from analyze import METRICS, analyze_job, report
 from generate_steps import write_generated
-from run_matrix import PI_VERSION, REPO, TASK, task_digest
+from run_matrix import PI_VERSION, PLAY_THINKING, REPO, TASK, task_digest
 
 
 def isolated_files(task: Path, index: int) -> dict[str, str]:
@@ -63,6 +63,7 @@ def command_for(harbor: str, root: Path, index: int, model: str, oracle: bool) -
     ]
     if not oracle:
         command += ["-m", model, "--ak", f"version={PI_VERSION}", "--agent-timeout-multiplier", "5"]
+        command += ["--ak", f"thinking={PLAY_THINKING}"]
         if os.environ.get("OPENAI_BASE_URL") or os.environ.get("OPENAI_API_BASE"):
             command += ["--ak", "model_api=openai-responses"]
     return command
@@ -146,6 +147,7 @@ def main() -> None:
         "condition": "no-memory-oracle" if args.oracle else "no-memory",
         "model": None if args.oracle else args.model,
         "pi_version": PI_VERSION,
+        "thinking": None if args.oracle else PLAY_THINKING,
         "seed": trial["seed"],
         "instance_sha256": fingerprint,
         "step_results": [],

@@ -286,6 +286,47 @@ Existing trajectory files and original logs are preserved.
 
 ### True no-memory control
 
+To run both **no-memory and learning-enabled** agents back-to-back on the same
+task/model and generate a comparison automatically:
+
+```bash
+.venv/bin/python tasks/affinity-arena/run_matrix.py --compare-memory \
+  --model google/gemini-3.5-flash --prefix arena-memory-1
+```
+
+Export `GEMINI_API_KEY` first. This runs 40 battles total and uses API quota.
+No-memory uses fresh sandboxes; learning preserves conversation and files.
+Both use low reasoning effort and the same play-first instructions, with
+helper computations limited by instruction to five seconds (not a sandbox limit).
+The headline is the paired reward gap (learning minus no-memory), with a
+five-battle rolling reward plot. Regret reduction is mathematically the same
+gap under the shared oracle, not independent evidence; wins are secondary.
+The report is saved to `results/arena-memory-1/comparison.md` within
+this task. Use a new prefix each time; `--dry-run` previews without API calls.
+An incomplete run stops the comparison and is flagged in the saved report.
+
+Regenerate that report later, without an API key or another run:
+
+```bash
+.venv/bin/python tasks/affinity-arena/run_matrix.py --compare-memory \
+  --report-only --prefix arena-memory-1
+```
+
+For a prespecified three-seed comparison (40 battles per new seed):
+
+```bash
+.venv/bin/python tasks/affinity-arena/run_matrix.py --compare-memory \
+  --seeds 1 2 3 --model google/gemini-3.5-flash --prefix arena-seeds-1
+```
+
+Optionally add `--reuse <completed-pair-report-directory>` to reuse an existing
+seed after model/settings/task-fingerprint checks. Each seed gets isolated task
+files; all requested pairs must finish before the aggregate headline is shown.
+Seeds receive equal weight. Individual seed curves and their mean appear in
+`results/arena-seeds-1/rolling-reward.svg`; `reward-summary.json` saves the numbers.
+These small-sample comparisons are descriptive, not significance tests.
+Regenerate with `--compare-memory --report-only --prefix arena-seeds-1`.
+
 With `GEMINI_API_KEY` exported, run the same twenty matchups in fresh sandboxes:
 
 ```bash
