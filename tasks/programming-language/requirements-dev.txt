@@ -1,0 +1,4 @@
+harbor==0.22.0
+pytest==9.1.1
+hypothesis==6.167.1
+ruff==0.16.6
