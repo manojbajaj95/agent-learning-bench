@@ -167,7 +167,7 @@ def test_harbor_resumes_logs_for_all_twenty_steps(tmp_path):
     # The probe intentionally leaves battles untouched: this tests resumption,
     # not gameplay, and does not install Pi or make model API calls.
     env = dict(os.environ)
-    env["PYTHONPATH"] = str(TASK / "checks") + (
+    env["PYTHONPATH"] = os.pathsep.join([str(TASK / "checks"), str(TASK)]) + (
         os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else ""
     )
     job = tmp_path / "jobs" / "resume-check"

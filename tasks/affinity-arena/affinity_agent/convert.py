@@ -36,15 +36,21 @@ def convert_events(source: Path, *, version: str = "unknown") -> Trajectory:
     session_id = None
     model = None
     skipped_lines = 0
-    for number, line in enumerate(source.read_text().splitlines(), 1):
+    truncated_tail_line = None
+    raw = source.read_text()
+    lines = raw.splitlines()
+    for number, line in enumerate(lines, 1):
         if not line.strip():
             continue
         try:
             event = json.loads(line)
         except json.JSONDecodeError as exc:
-            # Pi can print non-JSON startup diagnostics. A damaged event must
-            # not silently become a seemingly complete trajectory.
+            # A killed process can leave its final event half-written. Keep
+            # the valid prefix, visibly marked partial; reject interior damage.
             if line.lstrip().startswith("{"):
+                if number == len(lines) and not raw.endswith("\n"):
+                    truncated_tail_line = number
+                    break
                 raise ValueError(f"{source}:{number}: malformed Pi event") from exc
             skipped_lines += 1
             continue
@@ -139,9 +145,16 @@ def convert_events(source: Path, *, version: str = "unknown") -> Trajectory:
             "agent": {"name": "pi", "version": version, "model_name": model},
             "steps": steps,
             "final_metrics": totals,
-            "notes": "Export of this invocation's completed Pi messages; native resume history is not duplicated. Non-text media are placeholders; see pi.txt for originals.",
+            "notes": (
+                "PARTIAL: interrupted final event; only preceding completed messages are exported. "
+                if truncated_tail_line is not None
+                else ""
+            )
+            + "Export of this invocation's completed Pi messages; native resume history is not duplicated. Non-text media are placeholders; see pi.txt for originals.",
             "extra": {
                 "exporter": EXPORTER,
+                "partial": truncated_tail_line is not None or bool(pending),
+                "truncated_tail_line": truncated_tail_line,
                 "skipped_diagnostic_lines": skipped_lines,
                 "unresolved_tool_call_ids": list(pending),
             },

@@ -21,4 +21,11 @@ class PiTrajectoryAgent(Pi):
         super().populate_context_post_run(context)
         source = self.logs_dir / self._OUTPUT_FILENAME
         if source.is_file():
-            export_trajectory(source, version=self.version() or "unknown", replace=True)
+            try:
+                export_trajectory(source, version=self.version() or "unknown", replace=True)
+            except Exception:
+                # Viewer export is auxiliary: never mask an agent timeout or
+                # prevent Harbor from verifying and archiving this attempt.
+                self.logger.warning(
+                    "Trajectory export failed; native Pi logs preserved", exc_info=True
+                )

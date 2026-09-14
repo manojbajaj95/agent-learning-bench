@@ -1,8 +1,12 @@
 """Keyless Harbor test agent exercising Pi's log paths across resumed steps."""
 
+import json
 import shlex
 
 from harbor.agents.nop import NopAgent
+from harbor.trial.errors import AgentTimeoutError
+
+from affinity_agent import PiTrajectoryAgent
 
 _PROBE = """
 import os
@@ -38,3 +42,27 @@ class ResumeProbeAgent(NopAgent):
 
     async def resume(self, instruction, environment, context) -> None:
         await self.run(instruction, environment, context)
+
+
+class ExportProbeAgent(PiTrajectoryAgent):
+    """Exercise timeout cleanup and verification without installing Pi or using an API."""
+
+    def __init__(self, *args, interior=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.interior = interior
+
+    async def setup(self, environment) -> None:
+        pass
+
+    async def run(self, instruction, environment, context, **kwargs) -> None:
+        event = {"type": "message_end", "message": {"role": "user", "content": "Play."}}
+        log = json.dumps(event) + '\n{"type":'
+        if self.interior:
+            log += '\n{"type":"agent_end"}\n'
+        script = (
+            "from pathlib import Path; Path('/logs/agent/pi.txt').write_text(" + repr(log) + ")"
+        )
+        result = await environment.exec("python3 -c " + shlex.quote(script))
+        if result.return_code:
+            raise RuntimeError(result.stderr or result.stdout)
+        raise AgentTimeoutError("intentional keyless timeout probe")
