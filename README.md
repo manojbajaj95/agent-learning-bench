@@ -124,6 +124,7 @@ All tasks are runnable except Courier / Picker, which is a design only.
 | [Poker](tasks/poker/) | Verifiable | A sticky heads-up opponent across 100 hands |
 | [Affinity Arena](tasks/affinity-arena/) | Verifiable | A hidden affinity chart across twenty battles |
 | [Report check](tasks/report-check/) | Verifiable | An unpublished house style guide, learned from review comments |
+| [Programming language](tasks/programming-language/) | Verifiable | One generated language, learned through interpreter feedback across twenty programming problems |
 | [Courier / Picker](tasks/courier-picker/) | Verifiable | A fixed spatial map (design only) |
 | [Corpus](tasks/corpus/) | Non-verifiable | A frozen Confluence wiki map |
 | [Codebase Q&A](tasks/codebase-qa/) | Non-verifiable | Flask hierarchy and call patterns |

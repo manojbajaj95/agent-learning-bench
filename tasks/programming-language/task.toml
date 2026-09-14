@@ -1,0 +1,111 @@
+schema_version = "1.4"
+multi_step_reward_strategy = "mean"
+artifacts = ["/app/view.txt", "/app/notes.md", "/app/workspace", "/app/sessions"]
+
+[task]
+name = "agent-learning-bench/programming-language"
+version = "0.3.0"
+description = "Learn one generated programming language across twenty programming problems."
+keywords = ["programming", "hidden-rules", "multi-step", "continual-learning", "holdout"]
+
+[metadata]
+difficulty = "hard"
+category = "programming"
+seed = 1
+visibility = "hidden"
+
+[agent]
+user = "agent"
+timeout_sec = 300.0
+
+[verifier]
+user = "root"
+timeout_sec = 30.0
+
+[environment]
+network_mode = "public"
+build_timeout_sec = 600.0
+cpus = 1
+memory_mb = 2048
+storage_mb = 10240
+workdir = "/app"
+
+[[steps]]
+name = "problem-01"
+artifacts = ["/app/problems/problem-01.jsonl"]
+
+[[steps]]
+name = "problem-02"
+artifacts = ["/app/problems/problem-02.jsonl"]
+
+[[steps]]
+name = "problem-03"
+artifacts = ["/app/problems/problem-03.jsonl"]
+
+[[steps]]
+name = "problem-04"
+artifacts = ["/app/problems/problem-04.jsonl"]
+
+[[steps]]
+name = "problem-05"
+artifacts = ["/app/problems/problem-05.jsonl"]
+
+[[steps]]
+name = "problem-06"
+artifacts = ["/app/problems/problem-06.jsonl"]
+
+[[steps]]
+name = "problem-07"
+artifacts = ["/app/problems/problem-07.jsonl"]
+
+[[steps]]
+name = "problem-08"
+artifacts = ["/app/problems/problem-08.jsonl"]
+
+[[steps]]
+name = "problem-09"
+artifacts = ["/app/problems/problem-09.jsonl"]
+
+[[steps]]
+name = "problem-10"
+artifacts = ["/app/problems/problem-10.jsonl"]
+
+[[steps]]
+name = "problem-11"
+artifacts = ["/app/problems/problem-11.jsonl"]
+
+[[steps]]
+name = "problem-12"
+artifacts = ["/app/problems/problem-12.jsonl"]
+
+[[steps]]
+name = "problem-13"
+artifacts = ["/app/problems/problem-13.jsonl"]
+
+[[steps]]
+name = "problem-14"
+artifacts = ["/app/problems/problem-14.jsonl"]
+
+[[steps]]
+name = "problem-15"
+artifacts = ["/app/problems/problem-15.jsonl"]
+
+[[steps]]
+name = "problem-16"
+artifacts = ["/app/problems/problem-16.jsonl"]
+
+[[steps]]
+name = "problem-17"
+artifacts = ["/app/problems/problem-17.jsonl"]
+
+[[steps]]
+name = "problem-18"
+artifacts = ["/app/problems/problem-18.jsonl"]
+
+[[steps]]
+name = "problem-19"
+artifacts = ["/app/problems/problem-19.jsonl"]
+
+[[steps]]
+name = "problem-20"
+artifacts = ["/app/problems/problem-20.jsonl"]
