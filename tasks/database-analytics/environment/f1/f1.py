@@ -91,6 +91,12 @@ def gold_result(sql: str) -> list[list]:
 
 
 def normalize_answer(raw) -> list[list]:
+    """Coerce model answers to a list of rows.
+
+    Accepts a scalar, a list of scalars, a list of rows, or a mixed list
+    (e.g. ``[["STR","VER","OCO"], 1]``). Mixed shapes must not crash the
+    verifier — they should normalize and then fail the match if wrong.
+    """
     if isinstance(raw, dict) and "answer" in raw:
         raw = raw["answer"]
     if raw is None:
@@ -100,9 +106,13 @@ def normalize_answer(raw) -> list[list]:
     if isinstance(raw, list):
         if not raw:
             return []
-        if not isinstance(raw[0], (list, tuple)):
-            return [[_canon(v)] for v in raw]
-        return [[_canon(v) for v in row] for row in raw]
+        rows: list[list] = []
+        for item in raw:
+            if isinstance(item, (list, tuple)):
+                rows.append([_canon(v) for v in item])
+            else:
+                rows.append([_canon(item)])
+        return rows
     return [[_canon(raw)]]
 
 
