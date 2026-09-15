@@ -23,6 +23,7 @@ CONTROL_URL = os.environ.get(
 SESSION = os.environ.get("AGENT_BROWSER_SESSION", "webarena-shopping")
 REQUEST_TIMEOUT_SEC = int(os.environ.get("WEBARENA_REQUEST_TIMEOUT_SEC", "30"))
 RESET_TIMEOUT_SEC = int(os.environ.get("WEBARENA_RESET_TIMEOUT_SEC", "600"))
+RESET_ATTEMPTS = int(os.environ.get("WEBARENA_RESET_ATTEMPTS", "3"))
 LOGIN_WAIT_SEC = int(os.environ.get("WEBARENA_LOGIN_WAIT_SEC", "30"))
 SHOPPING_EMAIL = os.environ.get(
     "WEBARENA_SHOPPING_EMAIL", "emma.lopez@gmail.com"
@@ -64,31 +65,39 @@ def require_http_ok(
         ) from exc
 
 
-def require_healthy_status(url: str, opener=urlopen) -> dict:
-    try:
-        data = json.loads(require_http_ok(url, opener=opener))
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(f"Shopping reset failed: {url} is not healthy") from exc
-    if not data.get("success"):
-        raise RuntimeError(
-            f"Shopping reset failed: {url} is not healthy: {data.get('message', data)}"
-        )
-    return data
-
-
-def reset_site() -> None:
-    require_http_ok(
-        f"{CONTROL_URL}/reset", method="POST", timeout=RESET_TIMEOUT_SEC
-    )
+def wait_for_reset() -> None:
     deadline = time.monotonic() + RESET_TIMEOUT_SEC
     while time.monotonic() < deadline:
         try:
-            require_healthy_status(f"{CONTROL_URL}/status")
-            require_http_ok(f"{SHOPPING_URL}{HEALTH_PATH}")
-            return
-        except RuntimeError:
+            data = json.loads(require_http_ok(f"{CONTROL_URL}/status"))
+        except (RuntimeError, json.JSONDecodeError):
             time.sleep(2)
+            continue
+        if data.get("state") == "failed":
+            raise RuntimeError(f"Shopping reset failed: {data.get('message')}")
+        if data.get("success"):
+            try:
+                require_http_ok(f"{SHOPPING_URL}{HEALTH_PATH}")
+                return
+            except RuntimeError:
+                pass
+        time.sleep(2)
     raise RuntimeError("Shopping reset failed health check")
+
+
+def reset_site() -> None:
+    # The broker resets in the background, so a slow Magento boot shows up as a
+    # retry here instead of an HTTP timeout that aborts the rest of the run.
+    last: RuntimeError | None = None
+    for attempt in range(1, RESET_ATTEMPTS + 1):
+        try:
+            require_http_ok(f"{CONTROL_URL}/reset", method="POST")
+            wait_for_reset()
+            return
+        except RuntimeError as exc:
+            last = exc
+            print(f"reset attempt {attempt}/{RESET_ATTEMPTS}: {exc}", flush=True)
+    raise last or RuntimeError("Shopping reset failed")
 
 
 def browser(
