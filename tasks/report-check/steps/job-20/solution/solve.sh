@@ -14,7 +14,7 @@ Fee yield improved in the quarter. The retail book carried the gain and account 
 
 - Fee net billings for the quarter came to $402,000.
 - The retail book contributed $268,000 of that total.
-- Yield improved from the pricing change on 2026-07-01.
+- Yield has improved from the pricing change on 2026-07-01.
 
 ## Recommendation
 

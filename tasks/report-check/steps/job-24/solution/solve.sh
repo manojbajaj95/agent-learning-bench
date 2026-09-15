@@ -13,12 +13,12 @@ The clearing partner met the service level in the quarter. Fees were stable and 
 ## Findings
 
 - Fees paid to the partner were $214,000.
-- Late files fell from nine to two.
+- Late files fell from nine to two, the best result on record.
 - The service review was held on 2027-03-05.
 
 ## Recommendation
 
-Renew the contract for one year and keep the delivery window in the agreement.
+Renew the contract for one year and keep the delivery due dates in the agreement.
 
 ## Appendix
 

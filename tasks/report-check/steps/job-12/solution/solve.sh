@@ -8,7 +8,7 @@ cat > /app/report.md <<'REPORT_EOF'
 
 ## Summary
 
-The second quarter forecast holds. Net billings is tracking to plan and the account holder pipeline supports the second half of the year.
+The second quarter forecast holds. Net billings are tracking to plan and the account holder pipeline supports the second half of the year.
 
 ## Findings
 

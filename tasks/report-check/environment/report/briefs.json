@@ -11,7 +11,7 @@
     "findings": [
       "The migration ran for nine nights and finished on schedule.",
       "Two problems in the batch loader were closed the same week.",
-      "Customer statements rendered correctly after the cutover."
+      "Client statements rendered correctly after the cutover."
     ],
     "recommendation": "Keep the old store in read-only mode for one more period, then retire it.",
     "risk_note": null,
@@ -28,7 +28,7 @@
     "summary": "The onboarding queue cleared four days early. Support handled the overflow without extra staff and no customer waited longer than two days.",
     "findings": [
       "The queue held 320 files at the start of the period.",
-      "Three problems in the identity check step were fixed.",
+      "Three bugs in the identity check step were fixed.",
       "Customers in the priority lane were onboarded within one day."
     ],
     "recommendation": "Move two reviewers to the standard lane and keep the priority lane staffed.",
@@ -46,8 +46,8 @@
     "summary": "Support closed the backlog down to forty open tickets. The team cleared the oldest issues first and customer replies stayed inside the target window.",
     "findings": [
       "The backlog fell from 210 tickets to 40 tickets.",
-      "Repeat issues came mostly from the statements page.",
-      "No customer complaint was escalated during the period."
+      "Repeat tickets came mostly from the same glitch on the statements page.",
+      "No customer ticket was escalated during the period."
     ],
     "recommendation": "Publish a short guide for the statements page and review the backlog again next period.",
     "risk_note": null,
@@ -64,8 +64,8 @@
     "summary": "The nightly reconciliation run completed every night. Two breaks were opened and closed inside the period and no customer balance was restated.",
     "findings": [
       "The run finished before the cut-off on every night of the period.",
-      "Two problems were found in the fee posting step.",
-      "No customer balance required a restatement."
+      "Two glitches were found in the fee posting step.",
+      "No user balance required a restatement."
     ],
     "recommendation": "Add a second alert on the fee posting step and keep the current schedule.",
     "risk_note": null,
@@ -79,10 +79,10 @@
     "subject": "Treasury Sweep",
     "period_start": "2026-05-01",
     "period_end": "2026-05-31",
-    "summary": "The treasury sweep ran daily and moved idle balances to the reserve account. No sweep failed and no customer payment was delayed.",
+    "summary": "The treasury sweep ran daily and moved idle money to the reserve account. No sweep failed and no customer payment was delayed.",
     "findings": [
       "The sweep ran on every business day of the period.",
-      "One problem in the cut-off timer was corrected.",
+      "One bug in the cut-off timer was corrected.",
       "No customer payment was delayed by the sweep."
     ],
     "recommendation": "Keep the current cut-off and review the reserve floor next period.",
@@ -99,9 +99,9 @@
     "period_end": "2026-06-30",
     "summary": "The retention sweep removed expired records from three stores. Legal signed the record list and no customer file was deleted in error.",
     "findings": [
-      "The sweep covered the ledger store, the document store and the log store.",
-      "One problem in the exclusion list was corrected before the run.",
-      "No customer file was deleted in error."
+      "The sweep covered the ledger store, the document store and the log store with no outage.",
+      "One issue in the exclusion list was corrected before the run.",
+      "No file belonging to clients was deleted in error."
     ],
     "recommendation": "Run the sweep on the same schedule and extend it to the archive store next period.",
     "risk_note": null,
@@ -117,8 +117,8 @@
     "period_end": "2026-03-31",
     "summary": "The first quarter closed on time. Revenue held above plan and the customer base grew, with no material problem in the close calendar.",
     "findings": [
-      "Revenue for the quarter came to 1240000 dollars.",
-      "The close finished on March 31, 2026, one day ahead of the calendar.",
+      "Sales for the quarter came to 1240000 dollars.",
+      "The close finished on March 31, 2026, one day ahead of the deadline.",
       "Two problems in the intercompany step were cleared before sign-off."
     ],
     "recommendation": "Keep the close calendar unchanged and review the intercompany step before the next quarter.",
@@ -133,10 +133,10 @@
     "subject": "Payments Gateway Cutover",
     "period_start": "2026-04-01",
     "period_end": "2026-04-30",
-    "summary": "The gateway cutover moved all traffic to the new provider. Customer payments continued through the switch and the rollback plan was not used.",
+    "summary": "The gateway cutover moved all traffic to the new provider. Users kept paying through the switch and the rollback plan was not used.",
     "findings": [
-      "The cutover ran on April 18, 2026 during the low-volume window.",
-      "One problem in the retry queue was corrected the same day.",
+      "The cutover ran on April 18, 2026 during the low-volume window with no outages.",
+      "One glitch in the retry queue was corrected the same day.",
       "Customer payments settled at the normal rate after the switch."
     ],
     "recommendation": "Decommission the old gateway after one clean month and keep the retry alert in place.",
@@ -151,7 +151,7 @@
     "subject": "Fee Schedule Update",
     "period_start": "2026-01-01",
     "period_end": "2026-03-31",
-    "summary": "The new fee schedule took effect during the quarter. Revenue from fees rose and no customer left because of the change.",
+    "summary": "The new fee schedule took effect during the quarter. Revenues from fees rose and no customer left because of the change.",
     "findings": [
       "Fee revenue for the quarter came to 384500 dollars.",
       "The schedule took effect on February 1, 2026.",
@@ -169,14 +169,14 @@
     "subject": "Churn Review",
     "period_start": "2026-01-01",
     "period_end": "2026-03-31",
-    "summary": "Churn stayed inside the plan for the quarter. The customers who left were small accounts and the impact on revenue was limited.",
+    "summary": "Churn stayed inside the plan for the quarter. The customers who left were small accounts and the impact on profit was limited.",
     "findings": [
       "Eleven customers closed accounts during the quarter.",
       "Lost revenue from those accounts came to 96500 dollars.",
       "The largest closure was recorded on March 9, 2026."
     ],
     "recommendation": "Assign an owner to each renewal account and report the outcome next quarter.",
-    "risk_note": "Two large accounts are in renewal on July 31, 2026 and a loss there would move the churn line materially.",
+    "risk_note": "Two large clients are in renewal on July 31, 2026 and a loss there would move the churn line materially.",
     "figures": []
   },
   {
@@ -187,13 +187,13 @@
     "subject": "Settlement Delays",
     "period_start": "2026-05-01",
     "period_end": "2026-05-31",
-    "summary": "Settlement ran late on three days. The delays were traced to a slow clearing file and no customer lost value from the delay.",
+    "summary": "Settlement ran late on three days. The delays were traced to a slow clearing file and no customer lost money from the delay.",
     "findings": [
       "Settlement was late on May 6, 2026, May 7, 2026 and May 19, 2026.",
       "The problem was a slow file from the clearing partner.",
       "Customer balances were corrected on the same day each time."
     ],
-    "recommendation": "Ask the clearing partner for a delivery window and add an alert at the file cut-off.",
+    "recommendation": "Ask the clearing partner for fixed delivery deadlines and add an alert at the file cut-off.",
     "risk_note": "The clearing partner has not committed to a fixed delivery time, so the problem can repeat.",
     "figures": []
   },
@@ -205,11 +205,11 @@
     "subject": "Q2 Forecast",
     "period_start": "2026-04-01",
     "period_end": "2026-06-30",
-    "summary": "The second quarter forecast holds. Revenue is tracking to plan and the customer pipeline supports the second half of the year.",
+    "summary": "The second quarter forecast holds. Sales are tracking to plan and the customer pipeline supports the second half of the year.",
     "findings": [
       "Revenue for the quarter came to 1310000 dollars.",
       "The pipeline added nine customers during the quarter.",
-      "One problem in the forecast model was corrected on May 22, 2026."
+      "One bug in the forecast model was corrected on May 22, 2026."
     ],
     "recommendation": "Keep the current forecast and revisit the model assumptions before the third quarter.",
     "risk_note": null,
@@ -226,10 +226,10 @@
     "summary": "The quarterly filing was submitted on time. The reviewer raised two problems and both were closed before the deadline.",
     "findings": [
       "The filing was submitted on July 10, 2026.",
-      "Two problems in the transaction schedule were closed before submission.",
+      "Two issues in the transaction schedule were closed before submission.",
       "External counsel reviewed the filing on July 8, 2026."
     ],
-    "recommendation": "Start the schedule rework in the third quarter and keep the current reviewer.",
+    "recommendation": "Start the schedule rework in the third quarter and keep the current review staff.",
     "risk_note": "The filing rules change on January 1, 2027 and the schedule format will need rework.",
     "figures": []
   },
@@ -241,7 +241,7 @@
     "subject": "Merchant Mix",
     "period_start": "2026-01-01",
     "period_end": "2026-06-30",
-    "summary": "The merchant mix shifted toward retail during the half. Revenue per customer rose and the concentration in travel fell.",
+    "summary": "The merchant mix shifted toward retail during the half. Revenue per customer arguably rose and the travel share was somewhat lower.",
     "findings": [
       "Retail merchants produced revenue of 820000 dollars.",
       "Travel merchants produced revenue of 415000 dollars.",
@@ -269,7 +269,7 @@
       "Costs for the half were 1870000 dollars.",
       "Perhaps the largest single gain came from the fee change on February 1, 2026."
     ],
-    "recommendation": "Track both renewals weekly and keep the current cost plan.",
+    "recommendation": "We believe the team should track both renewals weekly and keep the current cost plan.",
     "risk_note": "Probably the second half depends on two renewals that close on July 31, 2026.",
     "figures": [
       { "label": "Net billings", "amount": 2550000 },
@@ -288,9 +288,9 @@
     "findings": [
       "The closing reserve balance was 640000 dollars.",
       "The lowest balance in the quarter was 512000 dollars.",
-      "The low point was recorded on May 12, 2026."
+      "The low point was recorded on May 12, 2026 and will likely recur next quarter."
     ],
-    "recommendation": "Raise the reserve floor by ten percent and review it again after the third quarter.",
+    "recommendation": "In our view the reserve floor should rise by ten percent and be reviewed again after the third quarter.",
     "risk_note": null,
     "figures": [
       { "label": "Closing reserve", "amount": 640000 },
@@ -305,14 +305,14 @@
     "subject": "Cost Base",
     "period_start": "2026-07-01",
     "period_end": "2026-09-30",
-    "summary": "The cost base fell in the third quarter. Vendor spend dropped after the contract review and customer support costs were flat.",
+    "summary": "The cost base fell in the third quarter. Vendor spend dropped after the contract review and customer support costs were kind of flat.",
     "findings": [
       "Total costs for the quarter were 1720000 dollars.",
-      "Vendor spend was 430000 dollars, down from the prior quarter.",
+      "Vendor spend was 430000 dollars, possibly down from the prior quarter.",
       "The contract review closed on August 14, 2026."
     ],
     "recommendation": "Approve the support headcount plan before the fourth quarter opens.",
-    "risk_note": "It seems the support headcount plan for the fourth quarter is not yet approved.",
+    "risk_note": "It seems the support staff plan for the fourth quarter is not yet approved.",
     "figures": [
       { "label": "Total costs", "amount": 1720000 },
       { "label": "Vendor spend", "amount": 430000 }
@@ -326,11 +326,11 @@
     "subject": "Currency Exposure",
     "period_start": "2026-07-01",
     "period_end": "2026-09-30",
-    "summary": "Currency exposure widened in the quarter. The hedge covered most of the position and no customer settlement was repriced.",
+    "summary": "Currency exposure widened in the quarter. The hedge covered most of the position, the gap might be temporary and no customer settlement was repriced.",
     "findings": [
       "The open position at quarter end was 275000 dollars.",
       "The hedged amount was 240000 dollars.",
-      "The position widened after the rate move on September 3, 2026."
+      "The position seems to have widened after the rate move on September 3, 2026."
     ],
     "recommendation": "Start the hedge renewal in the fourth quarter and keep the coverage ratio above eighty percent.",
     "risk_note": "The hedge expires on December 31, 2026 and renewal pricing is not fixed.",
@@ -350,10 +350,10 @@
     "summary": "The third quarter closed two days early. Revenue held above plan and the close calendar ran without a material problem.",
     "findings": [
       "Revenue for the quarter came to 1395000 dollars.",
-      "Adjustments booked at close were 62000 dollars.",
+      "Adjustments booked at close were sort of small at 62000 dollars.",
       "The close finished on October 2, 2026."
     ],
-    "recommendation": "Keep the close calendar and move the adjustment review one day earlier.",
+    "recommendation": "We feel the close calendar should stay and the adjustment review should move one day earlier.",
     "risk_note": null,
     "figures": [
       { "label": "Net billings", "amount": 1395000 },
@@ -368,11 +368,11 @@
     "subject": "Fee Yield",
     "period_start": "2026-07-01",
     "period_end": "2026-09-30",
-    "summary": "Fee yield improved in the quarter. The retail book carried the gain and customer pricing stayed unchanged.",
+    "summary": "It appears fee yield improved in the quarter. The retail book carried the gain and customer pricing stayed unchanged.",
     "findings": [
       "Fee revenue for the quarter came to 402000 dollars.",
       "The retail book contributed 268000 dollars of that total.",
-      "Yield improved from the pricing change on July 1, 2026."
+      "Yield appears to have improved from the pricing change on July 1, 2026."
     ],
     "recommendation": "Hold pricing for one more quarter and review the wholesale book in the fourth quarter.",
     "risk_note": null,
@@ -395,7 +395,7 @@
       "Revenue retained came to 815000 dollars.",
       "The last renewal signed on December 18, 2026."
     ],
-    "recommendation": "Open the next renewal cycle in the third quarter and assign owners early.",
+    "recommendation": "It looks like the next renewal cycle should open in the third quarter with owners assigned early.",
     "risk_note": "Three accounts moved to a one-year term, so the same problem returns on December 31, 2027.",
     "figures": [
       { "label": "Up for renewal", "amount": 890000 },
@@ -410,14 +410,14 @@
     "subject": "Liquidity Buffer",
     "period_start": "2026-10-01",
     "period_end": "2026-12-31",
-    "summary": "The liquidity buffer held above the floor all quarter. Settlement peaks were covered and no customer payment was held.",
+    "summary": "The liquidity buffer held above the floor all quarter. Settlement peaks were presumably covered and no customer payment was held.",
     "findings": [
       "The average buffer was 1150000 dollars.",
       "The lowest buffer was 730000 dollars.",
       "The low point followed the settlement peak on November 27, 2026."
     ],
     "recommendation": "Raise the buffer floor before January and review it after the peak.",
-    "risk_note": "We think the January settlement peak will be larger than the November peak.",
+    "risk_note": "We think the January settlement peak could be larger than the November peak.",
     "figures": [
       { "label": "Average buffer", "amount": 1150000 },
       { "label": "Lowest buffer", "amount": 730000 }
@@ -431,13 +431,13 @@
     "subject": "Batch Job Failure",
     "period_start": "2027-01-01",
     "period_end": "2027-01-31",
-    "summary": "A batch job failed on two nights in January. The failure was contained, customer balances were corrected and the root cause is closed.",
+    "summary": "A batch job failed on two nights in January and caused a short outage. The failure was contained, customer balances were corrected and the root cause is closed.",
     "findings": [
       "The job failed on January 14, 2027 and January 15, 2027.",
-      "The cause was a stale credential in the loader.",
+      "The cause was likely a stale credential in the loader.",
       "Corrections moved 148000 dollars across sixty-two accounts."
     ],
-    "recommendation": "Rotate loader credentials on a schedule and add a failure alert to the on-call rota.",
+    "recommendation": "Rotate loader credentials on a schedule and add a failure alert for on-call staff.",
     "risk_note": "The same credential pattern is used by two other jobs and has not been rotated.",
     "figures": [
       { "label": "Corrections", "amount": 148000 },
@@ -452,13 +452,13 @@
     "subject": "Clearing Partner",
     "period_start": "2027-01-01",
     "period_end": "2027-03-31",
-    "summary": "The clearing partner met the service level in the quarter. Fees were stable and no customer settlement was missed.",
+    "summary": "In our view the clearing partner met the service level in the quarter. Fees were stable and no customer settlement was missed.",
     "findings": [
       "Fees paid to the partner were 214000 dollars.",
-      "Late files fell from nine to two.",
+      "Late files fell from nine to two, arguably the best result on record.",
       "The service review was held on March 5, 2027."
     ],
-    "recommendation": "Renew the contract for one year and keep the delivery window in the agreement.",
+    "recommendation": "Renew the contract for one year and keep the delivery deadlines in the agreement.",
     "risk_note": null,
     "figures": [
       { "label": "Fees paid", "amount": 214000 },
@@ -473,13 +473,13 @@
     "subject": "Duplicate Settlement",
     "period_start": "2027-02-01",
     "period_end": "2027-02-28",
-    "summary": "A duplicate settlement file was released once in February. All duplicates were reversed the same day and no customer lost value.",
+    "summary": "A duplicate settlement file was released once in February. All duplicates were reversed the same day and no customer lost money.",
     "findings": [
       "The duplicate file was released on February 9, 2027.",
       "Perhaps the release step ran twice after a retry.",
       "Reversals returned 96400 dollars to thirty-one accounts."
     ],
-    "recommendation": "Add an idempotency key to the release step before the next settlement cycle.",
+    "recommendation": "Close the bug by adding an idempotency key to the release step before the next settlement cycle.",
     "risk_note": "The release step still has no idempotency check, so the problem can repeat.",
     "figures": [
       { "label": "Reversed amount", "amount": 96400 },
@@ -494,7 +494,7 @@
     "subject": "Support Outsourcer",
     "period_start": "2027-01-01",
     "period_end": "2027-03-31",
-    "summary": "The support outsourcer held quality through the quarter. Response times met the target and customer satisfaction was flat.",
+    "summary": "We believe the support outsourcer held quality through the quarter. Response times met the target and user satisfaction was flat.",
     "findings": [
       "Fees paid to the outsourcer were 178000 dollars.",
       "The team closed 12400 tickets in the quarter.",

@@ -8,7 +8,7 @@ cat > /app/report.md <<'REPORT_EOF'
 
 ## Summary
 
-A duplicate settlement file was released once in February. All duplicates were reversed the same day and no account holder lost value.
+A duplicate settlement file was released once in February. All duplicates were reversed the same day and no account holder lost funds.
 
 ## Findings
 
@@ -22,7 +22,7 @@ The release step still has no idempotency check, so the exception can repeat.
 
 ## Recommendation
 
-Add an idempotency key to the release step before the next settlement cycle.
+Close the exception by adding an idempotency key to the release step before the next settlement cycle.
 
 ## Appendix
 

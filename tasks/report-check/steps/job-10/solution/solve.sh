@@ -8,7 +8,7 @@ cat > /app/report.md <<'REPORT_EOF'
 
 ## Summary
 
-Churn stayed inside the plan for the quarter. The account holders who left were small accounts and the impact on net billings was limited.
+Churn stayed inside the plan for the quarter. The account holders who left were small accounts and the impact on net margin was limited.
 
 ## Findings
 
@@ -18,7 +18,7 @@ Churn stayed inside the plan for the quarter. The account holders who left were 
 
 ## Risk
 
-Two large accounts are in renewal on 2026-07-31 and a loss there would move the churn line materially.
+Two large account holders are in renewal on 2026-07-31 and a loss there would move the churn line materially.
 
 ## Recommendation
 

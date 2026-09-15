@@ -13,12 +13,12 @@ The third quarter closed two days early. Net billings held above plan and the cl
 ## Findings
 
 - Net billings for the quarter came to $1,395,000.
-- Adjustments booked at close were $62,000.
+- Adjustments booked at close were small at $62,000.
 - The close finished on 2026-10-02.
 
 ## Recommendation
 
-Keep the close calendar and move the adjustment review one day earlier.
+The close calendar should stay and the adjustment review should move one day earlier.
 
 ## Appendix
 

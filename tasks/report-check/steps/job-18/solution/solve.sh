@@ -8,13 +8,13 @@ cat > /app/report.md <<'REPORT_EOF'
 
 ## Summary
 
-Currency exposure widened in the quarter. The hedge covered most of the position and no account holder settlement was repriced.
+Currency exposure widened in the quarter. The hedge covered most of the position, the gap is temporary and no account holder settlement was repriced.
 
 ## Findings
 
 - The open position at quarter end was $275,000.
 - The hedged amount was $240,000.
-- The position widened after the rate move on 2026-09-03.
+- The position has widened after the rate move on 2026-09-03.
 
 ## Risk
 

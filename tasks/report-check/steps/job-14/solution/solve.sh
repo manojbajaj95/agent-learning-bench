@@ -8,7 +8,7 @@ cat > /app/report.md <<'REPORT_EOF'
 
 ## Summary
 
-The merchant mix shifted toward retail during the half. Net billings per account holder rose and the concentration in travel fell.
+The merchant mix shifted toward retail during the half. Net billings per account holder rose and the travel share was lower.
 
 ## Findings
 

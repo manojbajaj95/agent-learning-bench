@@ -8,7 +8,7 @@ cat > /app/report.md <<'REPORT_EOF'
 
 ## Summary
 
-A batch job failed on two nights in January. The failure was contained, account holder balances were corrected and the root cause is closed.
+A batch job failed on two nights in January and caused a short service interruption. The failure was contained, account holder balances were corrected and the root cause is closed.
 
 ## Findings
 
@@ -22,7 +22,7 @@ The same credential pattern is used by two other jobs and has not been rotated.
 
 ## Recommendation
 
-Rotate loader credentials on a schedule and add a failure alert to the on-call rota.
+Rotate loader credentials on a schedule and add a failure alert for on-call personnel.
 
 ## Appendix
 

@@ -5,7 +5,7 @@ cat > /app/report.md <<'REPORT_EOF'
 
 ## Summary
 
-The treasury sweep ran daily and moved idle balances to the reserve account. No sweep failed and no account holder payment was delayed.
+The treasury sweep ran daily and moved idle funds to the reserve account. No sweep failed and no account holder payment was delayed.
 
 ## Findings
 

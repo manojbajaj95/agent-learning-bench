@@ -9,9 +9,9 @@ The retention sweep removed expired records from three stores. Legal signed the 
 
 ## Findings
 
-- The sweep covered the ledger store, the document store and the log store.
+- The sweep covered the ledger store, the document store and the log store with no service interruption.
 - One exception in the exclusion list was corrected before the run.
-- No account holder file was deleted in error.
+- No file belonging to account holders was deleted in error.
 
 ## Recommendation
 
