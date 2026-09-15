@@ -1,0 +1,30 @@
+# How to run each learning system. The CLI reads this file.
+#
+#   alb systems
+#   alb run tally --system icl
+#
+# Add a system by adding a [systems.<name>] table. Do not put run recipes in
+# Python or duplicate Harbor flags in the README.
+
+model = "openai/gpt-5.6-luna"
+agent_timeout_multiplier = 5.0
+n_concurrent = 1
+
+[systems.baseline]
+summary = "Harbor pi. Fresh chat each step. No session files."
+agent = "pi"
+
+[systems.icl]
+summary = "Same pi. Resume the chat across steps (--resume-trajectory)."
+agent = "pi"
+flags = ["--resume-trajectory"]
+
+[systems.sessions]
+summary = "Same pi. Copy each session JSONL to /app/sessions/ for later steps."
+agent = "agents.pi_sessions:PiSessionsAgent"
+pythonpath = "."
+
+[systems.oracle]
+summary = "Harbor oracle. Writes the hidden solution. No model call."
+agent = "oracle"
+needs_model = false

@@ -38,39 +38,55 @@ One trial contains one fixed environment and many ordered Harbor steps. Each ste
 
 ## Learning systems
 
-The bench compares three systems. The task, model, and step order stay the same. Harbor's built-in [pi](https://pi.dev/) agent is the baseline harness. The other two systems add one thing on top of that same agent.
+The bench compares systems on the same task, model, and step order. Harbor's built-in [pi](https://pi.dev/) agent is the baseline harness. Other systems add one thing on top of that same agent.
 
 The container filesystem persists in every system (for example `/app/view.txt`).
 
-### Baseline
-
-Harbor's built-in `pi`. Each turn is a fresh chat with no session files, so turn 1 and turn 2 are independent.
+**Recipes live in [`systems.toml`](systems.toml).** The CLI reads that file. List them with:
 
 ```bash
-harbor run -p tasks/tally -a pi -m openai/gpt-5.6-luna \
-  --agent-timeout-multiplier 5
+uv sync
+source .venv/bin/activate
+alb systems
+alb run tally --system baseline
+alb run tally --system icl
 ```
 
-### Pi sessions
+- **baseline** — Harbor `pi`. Fresh chat each step.
+- **sessions** — same `pi`, plus [pi-sessions](agents/pi_sessions/) copies each session JSONL to `/app/sessions/`.
+- **icl** — same `pi`, with `--resume-trajectory` so earlier turns stay in context.
+- **oracle** — Harbor oracle. Writes the hidden solution. No model.
 
-The same `pi` agent, with a copy of each session. [pi-sessions](agents/pi_sessions/) writes each turn's JSONL to `/app/sessions/`. Later turns can read those files.
+To add a system, add a `[systems.<name>]` table in `systems.toml`.
+
+## CLI
+
+Install the Typer CLI with [uv](https://docs.astral.sh/uv/), then run `alb` from an active venv:
 
 ```bash
-PYTHONPATH=. harbor run -p tasks/tally \
-  -a agents.pi_sessions:PiSessionsAgent \
-  -m openai/gpt-5.6-luna \
-  --agent-timeout-multiplier 5
+uv sync
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+alb --help
 ```
 
-### In-context learning
-
-The same `pi` agent as baseline. `--resume-trajectory` continues the chat across turns. Harbor sets this on agents that declare `SUPPORTS_RESUME` (pi does). Earlier turns stay in the model context.
+Commands: `prepare`, `smoke`, `run`, `upload`, `report`, `systems`, `tasks`.
 
 ```bash
-harbor run -p tasks/tally -a pi -m openai/gpt-5.6-luna \
-  --resume-trajectory \
-  --agent-timeout-multiplier 5
+alb systems
+alb prepare database-analytics
+alb smoke database-analytics --system baseline
+alb run database-analytics --system icl
+alb upload database-analytics-icl
+alb report --task database-analytics
 ```
+
+Systems come from [`systems.toml`](systems.toml). Smoke is the first 10 steps. `prepare` skips `download.sh` when `data/` already has files. Extra Harbor flags go after `--`.
+
+```bash
+alb run tally --system icl -- --force-build
+```
+
+Reports go to `reports/latest.md`, `reports/latest.html`, and SVG charts.
 
 ## Feedback domains
 
@@ -139,7 +155,7 @@ Build tasks in [Harbor](https://www.harborframework.com/docs) format and submit 
 - the stable object that the agent must learn;
 - the expected learning curve;
 - the per-step reward and cost metric;
-- the baseline, pi-sessions, and in-context run commands; and
+- the baseline, sessions, and in-context entries in [`systems.toml`](systems.toml); and
 - the holdout or other control that rules out shortcuts.
 
 ## References
