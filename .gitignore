@@ -6,9 +6,6 @@ __pycache__/
 *.pyc
 .venv/
 tasks/database-analytics/data/
-tasks/database-analytics/environment/data/
-tasks/database-analytics/steps/
-tasks/database-analytics/task.toml
 tasks/codebase-qa/data/
 tasks/codebase-qa/environment/data/
 tasks/codebase-qa/steps/
