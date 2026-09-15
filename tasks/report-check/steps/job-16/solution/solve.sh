@@ -14,11 +14,11 @@ Reserve balances rose through the quarter. The floor was never breached and no a
 
 - The closing reserve balance was $640,000.
 - The lowest balance in the quarter was $512,000.
-- The low point was recorded on 2026-05-12.
+- The low point was recorded on 2026-05-12 and will recur next quarter.
 
 ## Recommendation
 
-Raise the reserve floor by ten percent and review it again after the third quarter.
+The reserve floor should rise by ten percent and be reviewed again after the third quarter.
 
 ## Appendix
 

@@ -50,25 +50,61 @@ TERMS = [
     ("customer", "account holder"),
     ("clients", "account holders"),
     ("client", "account holder"),
+    ("users", "account holders"),
+    ("user", "account holder"),
     ("revenues", "net billings"),
     ("revenue", "net billings"),
+    ("sales", "net billings"),
+    ("profit", "net margin"),
     ("problems", "exceptions"),
     ("problem", "exception"),
     ("issues", "exceptions"),
     ("issue", "exception"),
+    ("glitches", "exceptions"),
+    ("glitch", "exception"),
+    ("bugs", "exceptions"),
+    ("bug", "exception"),
+    ("tickets", "cases"),
+    ("ticket", "case"),
+    ("outages", "service interruptions"),
+    ("outage", "service interruption"),
+    ("deadlines", "due dates"),
+    ("deadline", "due date"),
+    ("staff", "personnel"),
+    ("money", "funds"),
 ]
 
 HEDGES = [
     "maybe",
     "probably",
     "perhaps",
+    "possibly",
+    "presumably",
+    "likely",
+    "arguably",
+    "somewhat",
     "we think",
     "we believe",
+    "we feel",
+    "in our view",
     "it seems",
     "seems to",
+    "it appears",
+    "appears to",
+    "it looks like",
     "sort of",
     "kind of",
     "might be",
+    "could be",
+]
+
+# Oracle only. These hedges carry the verb, so dropping them outright would
+# leave the sentence without one.
+HEDGE_REWRITES = [
+    ("seems to have", "has"),
+    ("appears to have", "has"),
+    ("might be", "is"),
+    ("could be", "is"),
 ]
 
 MONTHS = {
@@ -178,6 +214,8 @@ def section_body(text_sections: list[tuple[str, list[str]]], name: str) -> list[
 
 def _drop_hedges(text: str) -> str:
     out = text
+    for hedge, plain in HEDGE_REWRITES:
+        out = re.sub(rf"(?i)\b{re.escape(hedge)}\b", plain, out)
     for hedge in HEDGES:
         out = re.sub(rf"(?i)\b{re.escape(hedge)}\b\s*", "", out)
     out = out.strip()

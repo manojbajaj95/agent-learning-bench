@@ -13,7 +13,7 @@ The first quarter closed on time. Net billings held above plan and the account h
 ## Findings
 
 - Net billings for the quarter came to $1,240,000.
-- The close finished on 2026-03-31, one day ahead of the calendar.
+- The close finished on 2026-03-31, one day ahead of the due date.
 - Two exceptions in the intercompany step were cleared before sign-off.
 
 ## Recommendation

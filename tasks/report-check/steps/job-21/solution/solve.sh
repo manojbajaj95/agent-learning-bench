@@ -22,7 +22,7 @@ Three accounts moved to a one-year term, so the same exception returns on 2027-1
 
 ## Recommendation
 
-Open the next renewal cycle in the third quarter and assign owners early.
+The next renewal cycle should open in the third quarter with owners assigned early.
 
 ## Appendix
 
