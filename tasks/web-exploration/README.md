@@ -30,7 +30,8 @@ Keep the broker running in one terminal. Harbor runs in another.
 python3 tasks/web-exploration/reset_broker.py
 ```
 
-First time only, wait until Shopping is healthy:
+First time only, wait until Shopping is healthy. `/reset` returns right away;
+repeat `/status` until it reports `"success": true`:
 
 ```bash
 curl -X POST http://localhost:7772/reset

@@ -7,6 +7,7 @@ import json
 import os
 import shutil
 import subprocess
+import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -22,6 +23,9 @@ SITE_PORT = int(os.environ.get("WEBARENA_SHOPPING_PORT", "7770"))
 ENV_CTRL_PORT = int(os.environ.get("WEBARENA_ENV_CTRL_PORT", "7771"))
 BROKER_PORT = int(os.environ.get("WEBARENA_BROKER_PORT", "7772"))
 RESET_TIMEOUT_SEC = int(os.environ.get("WEBARENA_RESET_TIMEOUT_SEC", "600"))
+
+RESET_LOCK = threading.Lock()
+RESET_STATE: dict = {"running": False, "error": None}
 
 
 def docker_bin() -> str:
@@ -98,6 +102,28 @@ def recreate_shopping() -> None:
     wait_until_ready()
 
 
+def run_reset() -> None:
+    error = None
+    try:
+        recreate_shopping()
+    except subprocess.CalledProcessError as exc:
+        error = (exc.stderr or str(exc)).strip()
+    except Exception as exc:
+        error = str(exc) or type(exc).__name__
+    with RESET_LOCK:
+        RESET_STATE.update(running=False, error=error)
+
+
+def start_reset() -> bool:
+    """Start a reset in the background; join one that is already running."""
+    with RESET_LOCK:
+        if RESET_STATE["running"]:
+            return False
+        RESET_STATE.update(running=True, error=None)
+    threading.Thread(target=run_reset, daemon=True).start()
+    return True
+
+
 class Handler(BaseHTTPRequestHandler):
     def _send(self, code: int, payload: dict) -> None:
         body = json.dumps(payload).encode()
@@ -111,22 +137,33 @@ class Handler(BaseHTTPRequestHandler):
         if self.path.split("?", 1)[0] != "/status":
             self._send(404, {"success": False, "message": "not found"})
             return
-        ready = control_ready() and site_ready()
-        self._send(
-            200,
-            {"success": ready, "message": "ok" if ready else "not ready"},
-        )
+        with RESET_LOCK:
+            running, error = RESET_STATE["running"], RESET_STATE["error"]
+        if running:
+            payload = {"success": False, "state": "resetting", "message": "reset in progress"}
+        elif error:
+            payload = {"success": False, "state": "failed", "message": error}
+        else:
+            ready = control_ready() and site_ready()
+            payload = {
+                "success": ready,
+                "state": "ready" if ready else "not_ready",
+                "message": "ok" if ready else "not ready",
+            }
+        self._send(200, payload)
 
     def do_POST(self) -> None:
         if self.path.split("?", 1)[0] != "/reset":
             self._send(404, {"success": False, "message": "not found"})
             return
-        try:
-            recreate_shopping()
-        except Exception as exc:
-            self._send(500, {"success": False, "message": str(exc)})
-            return
-        self._send(200, {"success": True, "message": "reset"})
+        started = start_reset()
+        self._send(
+            202,
+            {
+                "success": True,
+                "message": "reset started" if started else "reset already running",
+            },
+        )
 
     def log_message(self, format, *args) -> None:
         print("reset-broker:", args[0] if args else format)
