@@ -66,9 +66,11 @@ def cmd_publish(index: str) -> None:
     questions = json.loads(QUESTIONS_PATH.read_text())
     item = questions[n - 1]
     STEP_PATH.write_text(str(n) + "\n")
-    QUESTION_PATH.write_text(
-        f"Question {n} of {len(questions)}\n\n{item['question']}\n"
-    )
+    fmt = (item.get("format") or "").strip()
+    text = f"Question {n} of {len(questions)}\n\n{item['question']}\n"
+    if fmt:
+        text += f"\nAnswer format: {fmt}\n"
+    QUESTION_PATH.write_text(text)
     if ANSWER_PATH.exists():
         ANSWER_PATH.unlink()
 
@@ -90,41 +92,60 @@ def gold_result(sql: str) -> list[list]:
     return [[_canon(v) for v in row] for row in rows]
 
 
-def normalize_answer(raw) -> list[list]:
-    """Coerce model answers to a list of rows.
-
-    Accepts a scalar, a list of scalars, a list of rows, or a mixed list
-    (e.g. ``[["STR","VER","OCO"], 1]``). Mixed shapes must not crash the
-    verifier — they should normalize and then fail the match if wrong.
-    """
+def _unwrap(raw):
     if isinstance(raw, dict) and "answer" in raw:
         raw = raw["answer"]
+    if isinstance(raw, dict):
+        return list(raw.values())
+    return raw
+
+
+def _cell(value):
+    if value is None:
+        return None
+    if isinstance(value, str):
+        text = value.strip()
+        return text if text else None
+    if isinstance(value, float) and value == int(value) and abs(value) < 1e12:
+        return int(value)
+    return _canon(value)
+
+
+def normalize_answer(raw) -> list[list]:
+    raw = _unwrap(raw)
     if raw is None:
         return []
     if isinstance(raw, (str, int, float, bool)):
-        return [[_canon(raw)]]
+        return [[_cell(raw)]]
     if isinstance(raw, list):
         if not raw:
             return []
         rows: list[list] = []
         for item in raw:
+            item = _unwrap(item)
             if isinstance(item, (list, tuple)):
-                rows.append([_canon(v) for v in item])
+                rows.append([_cell(_unwrap(v)) for v in item])
             else:
-                rows.append([_canon(item)])
+                rows.append([_cell(item)])
         return rows
-    return [[_canon(raw)]]
+    return [[_cell(raw)]]
+
+
+def collapse(rows: list[list]):
+    """Same JSON shape as the oracle: scalar, list, or list of rows."""
+    rows = [[_cell(v) for v in row] for row in rows]
+    if not rows or not any(c is not None for row in rows for c in row):
+        return None
+    if all(len(row) == 1 for row in rows):
+        values = [row[0] for row in rows]
+        return values[0] if len(values) == 1 else values
+    if len(rows) == 1:
+        return rows[0]
+    return rows
 
 
 def answers_match(pred, gold_rows: list[list]) -> bool:
-    pred_rows = normalize_answer(pred)
-    gold_norm = [[_canon(v) for v in row] for row in gold_rows]
-    if pred_rows == gold_norm:
-        return True
-    try:
-        return sorted(map(tuple, pred_rows)) == sorted(map(tuple, gold_norm))
-    except TypeError:
-        return False
+    return collapse(normalize_answer(pred)) == collapse(gold_rows)
 
 
 def _trajectory_metrics() -> tuple[int, int]:
