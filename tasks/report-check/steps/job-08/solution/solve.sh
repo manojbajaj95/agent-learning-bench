@@ -8,11 +8,11 @@ cat > /app/report.md <<'REPORT_EOF'
 
 ## Summary
 
-The gateway cutover moved all traffic to the new provider. Account holder payments continued through the switch and the rollback plan was not used.
+The gateway cutover moved all traffic to the new provider. Account holders kept paying through the switch and the rollback plan was not used.
 
 ## Findings
 
-- The cutover ran on 2026-04-18 during the low-volume window.
+- The cutover ran on 2026-04-18 during the low-volume window with no service interruptions.
 - One exception in the retry queue was corrected the same day.
 - Account holder payments settled at the normal rate after the switch.
 

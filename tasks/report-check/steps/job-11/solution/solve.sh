@@ -8,7 +8,7 @@ cat > /app/report.md <<'REPORT_EOF'
 
 ## Summary
 
-Settlement ran late on three days. The delays were traced to a slow clearing file and no account holder lost value from the delay.
+Settlement ran late on three days. The delays were traced to a slow clearing file and no account holder lost funds from the delay.
 
 ## Findings
 
@@ -22,7 +22,7 @@ The clearing partner has not committed to a fixed delivery time, so the exceptio
 
 ## Recommendation
 
-Ask the clearing partner for a delivery window and add an alert at the file cut-off.
+Ask the clearing partner for fixed delivery due dates and add an alert at the file cut-off.
 
 -- End of report --
 REPORT_EOF

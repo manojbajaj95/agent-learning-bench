@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -12,7 +13,9 @@ sys.dont_write_bytecode = True  # keep .pyc out of the image build context
 sys.path.insert(0, str(ROOT / "environment" / "report"))
 
 from engine import (  # noqa: E402
+    HEDGES,
     MAX_SUBMISSIONS,
+    TERMS,
     REPORT_MAX_WORDS,
     SUMMARY_MAX_WORDS,
     active_rules,
@@ -43,6 +46,17 @@ def naive_report(brief: dict) -> str:
     return "\n".join(lines)
 
 
+def source_text(brief: dict) -> str:
+    parts = [brief["summary"], *brief["findings"], brief["recommendation"]]
+    if brief.get("risk_note"):
+        parts.append(brief["risk_note"])
+    return "\n".join(parts)
+
+
+def uses(text: str, phrase: str) -> bool:
+    return re.search(rf"(?i)\b{re.escape(phrase)}\b", text) is not None
+
+
 def main() -> int:
     briefs = load_briefs()
     expect(len(briefs) == 26, f"expected 26 briefs, found {len(briefs)}")
@@ -66,12 +80,27 @@ def main() -> int:
     held = {b["report_type"] for b in briefs if b.get("holdout")}
     expect(not (seen & held), f"holdout report types must be new, shared: {seen & held}")
 
+    # Every hidden value must be corrected at least once before the holdout,
+    # or it is either dead weight or a rule the holdout tests without teaching.
+    taught_terms = "\n".join(source_text(b) for b in briefs if not b.get("holdout"))
+    taught_hedges = "\n".join(
+        source_text(b)
+        for b in briefs
+        if not b.get("holdout") and "R10-NO-HEDGE" in active_rules(b["tier"])
+    )
+    for bad, _ in TERMS:
+        expect(uses(taught_terms, bad), f'term "{bad}" never appears in a graded brief before the holdout')
+    for hedge in HEDGES:
+        expect(uses(taught_hedges, hedge), f'hedge "{hedge}" never appears in a tier-3 brief before the holdout')
+
     for brief in briefs:
         name = step_name(brief["id"])
         gold = compose_gold(brief)
 
         faults = check(gold, brief)
         expect(not faults, f"{name}: the oracle report is rejected: {faults}")
+        leftovers = [p for p in [b for b, _ in TERMS] + HEDGES if uses(gold, p)]
+        expect(not leftovers, f"{name}: the oracle keeps house-style violations: {leftovers}")
 
         # An oracle that would pass a harder job must also pass this one, so a
         # late rule can never contradict an early one.

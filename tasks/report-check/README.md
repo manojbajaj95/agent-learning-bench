@@ -68,6 +68,14 @@ off, so a late job is graded on everything an early job was graded on.
 | 2 | job-07 … job-13 | metadata block (preparer, period, register ref), money format, ISO dates, Findings bullets, Risk section |
 | 3 | job-14 … job-26 | no hedging, Appendix figure table, whole-report word limit |
 
+Two of those rules carry a hidden vocabulary: R03-TERMS maps 26 plain words
+("customer", "user", "sales", "glitch", "ticket", "outage", "deadline", "staff",
+"money", …) onto house terms, and R10-NO-HEDGE bans 21 hedges ("maybe",
+"likely", "arguably", "in our view", "it looks like", "could be", …). The desk
+quotes at most four terms and three hedges per rejection, so the full lists
+only come out over several jobs. Every term appears in a brief before the
+holdout, and every hedge appears in a tier-3 brief before the holdout.
+
 The briefs are written in plain language and deliberately break house style:
 they say "customer", "revenue", "problem", "1240000 dollars", "March 12, 2026"
 and open with "Perhaps". A report that copies the brief is rejected on several
@@ -193,7 +201,8 @@ so the two cannot drift.
 `test_engine.py` checks that against every brief: the oracle is accepted with no
 violations, a report that copies the brief is rejected on at least three rules,
 the rule set only grows with tier, the holdout uses report types that appear
-nowhere earlier, and the published brief leaks no rule.
+nowhere earlier, every hidden term and hedge is graded before the holdout, the
+oracle keeps none of them, and the published brief leaks no rule.
 
 ```bash
 python3 test_engine.py

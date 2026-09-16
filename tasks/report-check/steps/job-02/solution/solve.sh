@@ -5,7 +5,7 @@ cat > /app/report.md <<'REPORT_EOF'
 
 ## Summary
 
-The onboarding queue cleared four days early. Support handled the overflow without extra staff and no account holder waited longer than two days.
+The onboarding queue cleared four days early. Support handled the overflow without extra personnel and no account holder waited longer than two days.
 
 ## Findings
 

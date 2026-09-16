@@ -13,7 +13,7 @@ The support outsourcer held quality through the quarter. Response times met the 
 ## Findings
 
 - Fees paid to the outsourcer were $178,000.
-- The team closed 12400 tickets in the quarter.
+- The team closed 12400 cases in the quarter.
 - The quarterly review was held on 2027-03-19.
 
 ## Recommendation

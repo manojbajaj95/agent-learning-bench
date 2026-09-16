@@ -22,7 +22,7 @@ The second half depends on two renewals that close on 2026-07-31.
 
 ## Recommendation
 
-Track both renewals weekly and keep the current cost plan.
+The team should track both renewals weekly and keep the current cost plan.
 
 ## Appendix
 

@@ -18,7 +18,7 @@ The cost base fell in the third quarter. Vendor spend dropped after the contract
 
 ## Risk
 
-The support headcount plan for the fourth quarter is not yet approved.
+The support personnel plan for the fourth quarter is not yet approved.
 
 ## Recommendation
 

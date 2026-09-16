@@ -8,7 +8,7 @@ cat > /app/report.md <<'REPORT_EOF'
 
 ## Summary
 
-The quarterly filing was submitted on time. The reviewer raised two exceptions and both were closed before the deadline.
+The quarterly filing was submitted on time. The reviewer raised two exceptions and both were closed before the due date.
 
 ## Findings
 
@@ -22,7 +22,7 @@ The filing rules change on 2027-01-01 and the schedule format will need rework.
 
 ## Recommendation
 
-Start the schedule rework in the third quarter and keep the current reviewer.
+Start the schedule rework in the third quarter and keep the current review personnel.
 
 -- End of report --
 REPORT_EOF

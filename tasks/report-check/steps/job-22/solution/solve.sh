@@ -18,7 +18,7 @@ The liquidity buffer held above the floor all quarter. Settlement peaks were cov
 
 ## Risk
 
-The January settlement peak will be larger than the November peak.
+The January settlement peak is larger than the November peak.
 
 ## Recommendation
 
