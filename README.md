@@ -144,7 +144,7 @@ All tasks are runnable except Courier / Picker, which is a design only.
 | [Courier / Picker](tasks/courier-picker/) | Verifiable | A fixed spatial map (design only) |
 | [Corpus](tasks/corpus/) | Non-verifiable | A frozen Confluence wiki map |
 | [Codebase Q&A](tasks/codebase-qa/) | Non-verifiable | Flask hierarchy and call patterns |
-| [Database analytics](tasks/database-analytics/) | Non-verifiable | Formula 1 schema and query patterns |
+| [Database analytics](tasks/database-analytics/) | Verifiable | Formula 1 schema and query patterns |
 | [Web exploration](tasks/web-exploration/) | Non-verifiable | WebArena-Verified Shopping structure and navigation across 187 tasks with `agent-browser` |
 
 ## Contributing a task

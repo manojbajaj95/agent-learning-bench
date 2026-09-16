@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+import json, subprocess
+from pathlib import Path
+sql = "SELECT AVG(T1.fastestLapSpeed) FROM results AS T1 INNER JOIN races AS T2 on T1.raceId = T2.raceId WHERE T2.year = 2009 AND T2.name = 'Spanish Grand Prix'"
+raw = subprocess.check_output(['db', 'query', sql], text=True)
+rows = json.loads(raw.splitlines()[0])
+if len(rows) == 1 and len(rows[0]) == 1:
+    answer = rows[0][0]
+elif rows and all(len(r) == 1 for r in rows):
+    answer = [r[0] for r in rows]
+else:
+    answer = rows
+Path('/app/answer.json').write_text(json.dumps({'answer': answer}) + '\n')
