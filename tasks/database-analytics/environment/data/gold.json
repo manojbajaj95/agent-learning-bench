@@ -9,7 +9,7 @@
   },
   {
     "question_id": 848,
-    "SQL": "SELECT T2.year FROM circuits AS T1 INNER JOIN races AS T2 ON T2.circuitID = T1.circuitId WHERE T1.location = 'Shanghai'"
+    "SQL": "SELECT DISTINCT T2.year FROM circuits AS T1 INNER JOIN races AS T2 ON T2.circuitID = T1.circuitId WHERE T1.location = 'Shanghai' ORDER BY T2.year ASC"
   },
   {
     "question_id": 849,
@@ -21,7 +21,7 @@
   },
   {
     "question_id": 851,
-    "SQL": "SELECT DISTINCT T1.position FROM constructorStandings AS T1 INNER JOIN constructors AS T2 ON T2.constructorId = T1.constructorId WHERE T2.name = 'Renault'"
+    "SQL": "SELECT DISTINCT T1.position FROM constructorStandings AS T1 INNER JOIN constructors AS T2 ON T2.constructorId = T1.constructorId WHERE T2.name = 'Renault' ORDER BY T1.position ASC"
   },
   {
     "question_id": 852,
@@ -29,7 +29,7 @@
   },
   {
     "question_id": 853,
-    "SQL": "SELECT DISTINCT T2.name FROM circuits AS T1 INNER JOIN races AS T2 ON T2.circuitID = T1.circuitId WHERE T1.country = 'Spain'"
+    "SQL": "SELECT DISTINCT T2.name FROM circuits AS T1 INNER JOIN races AS T2 ON T2.circuitID = T1.circuitId WHERE T1.country = 'Spain' ORDER BY T2.name ASC"
   },
   {
     "question_id": 854,
@@ -41,7 +41,7 @@
   },
   {
     "question_id": 856,
-    "SQL": "SELECT DISTINCT T2.`time` FROM circuits AS T1 INNER JOIN races AS T2 ON T2.circuitID = T1.circuitId WHERE T1.name = 'Sepang International Circuit'"
+    "SQL": "SELECT DISTINCT T2.`time` FROM circuits AS T1 INNER JOIN races AS T2 ON T2.circuitID = T1.circuitId WHERE T1.name = 'Sepang International Circuit' ORDER BY T2.`time` ASC"
   },
   {
     "question_id": 857,
@@ -253,7 +253,7 @@
   },
   {
     "question_id": 909,
-    "SQL": "SELECT CAST(COUNT(DISTINCT CASE WHEN T1.country = 'Germany' THEN T2.raceId END) AS REAL) * 100 / COUNT(DISTINCT T2.raceId) FROM circuits T1 INNER JOIN races T2 ON T2.circuitId = T1.circuitId WHERE T2.name = 'European Grand Prix'"
+    "SQL": "SELECT FLOOR((CAST(COUNT(DISTINCT CASE WHEN T1.country = 'Germany' THEN T2.raceId END) AS REAL) * 100 / COUNT(DISTINCT T2.raceId)) * 100) / 100.0 FROM circuits T1 INNER JOIN races T2 ON T2.circuitId = T1.circuitId WHERE T2.name = 'European Grand Prix'"
   },
   {
     "question_id": 910,
@@ -297,7 +297,7 @@
   },
   {
     "question_id": 920,
-    "SQL": "SELECT DISTINCT T2.year FROM circuits AS T1 INNER JOIN races AS T2 ON T2.circuitID = T1.circuitId WHERE T1.name = 'Silverstone Circuit'"
+    "SQL": "SELECT DISTINCT T2.year FROM circuits AS T1 INNER JOIN races AS T2 ON T2.circuitID = T1.circuitId WHERE T1.name = 'Silverstone Circuit' ORDER BY T2.year ASC"
   },
   {
     "question_id": 921,
@@ -313,7 +313,7 @@
   },
   {
     "question_id": 924,
-    "SQL": "SELECT T2.date FROM circuits AS T1 INNER JOIN races AS T2 ON T2.circuitID = T1.circuitId WHERE T1.name = 'Circuit de Barcelona-Catalunya'"
+    "SQL": "SELECT T2.date FROM circuits AS T1 INNER JOIN races AS T2 ON T2.circuitID = T1.circuitId WHERE T1.name = 'Circuit de Barcelona-Catalunya' ORDER BY T2.date ASC"
   },
   {
     "question_id": 925,
@@ -333,7 +333,7 @@
   },
   {
     "question_id": 929,
-    "SQL": "SELECT T1.name FROM races AS T1 INNER JOIN results AS T2 ON T2.raceId = T1.raceId INNER JOIN drivers AS T3 ON T3.driverId = T2.driverId WHERE T3.forename = 'Lewis' AND T3.surname = 'Hamilton'"
+    "SQL": "SELECT DISTINCT T1.name FROM races AS T1 INNER JOIN results AS T2 ON T2.raceId = T1.raceId INNER JOIN drivers AS T3 ON T3.driverId = T2.driverId WHERE T3.forename = 'Lewis' AND T3.surname = 'Hamilton' ORDER BY T1.name ASC"
   },
   {
     "question_id": 930,
@@ -345,7 +345,7 @@
   },
   {
     "question_id": 932,
-    "SQL": "SELECT DISTINCT T1.year FROM races AS T1 INNER JOIN results AS T2 ON T2.raceId = T1.raceId INNER JOIN drivers AS T3 ON T3.driverId = T2.driverId WHERE T3.forename = 'Lewis' AND T3.surname = 'Hamilton'"
+    "SQL": "SELECT DISTINCT T1.year FROM races AS T1 INNER JOIN results AS T2 ON T2.raceId = T1.raceId INNER JOIN drivers AS T3 ON T3.driverId = T2.driverId WHERE T3.forename = 'Lewis' AND T3.surname = 'Hamilton' ORDER BY T1.year ASC"
   },
   {
     "question_id": 933,
@@ -529,7 +529,7 @@
   },
   {
     "question_id": 978,
-    "SQL": "SELECT DISTINCT location, lat, lng\nFROM circuits\nWHERE country = 'Austria'"
+    "SQL": "SELECT DISTINCT location, lat, lng FROM circuits WHERE country = 'Austria' ORDER BY location ASC"
   },
   {
     "question_id": 979,
@@ -685,7 +685,7 @@
   },
   {
     "question_id": 1017,
-    "SQL": "SELECT T3.lat, T3.lng FROM lapTimes AS T1 INNER JOIN races AS T2 on T1.raceId = T2.raceId INNER JOIN circuits AS T3 on T2.circuitId = T3.circuitId WHERE T1.time = '1:29.488'"
+    "SQL": "SELECT DISTINCT T3.lat, T3.lng FROM lapTimes AS T1 INNER JOIN races AS T2 on T1.raceId = T2.raceId INNER JOIN circuits AS T3 on T2.circuitId = T3.circuitId WHERE T1.time = '1:29.488' ORDER BY T3.lat ASC, T3.lng ASC"
   },
   {
     "question_id": 1018,

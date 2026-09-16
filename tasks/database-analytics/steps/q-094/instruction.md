@@ -20,7 +20,10 @@ Find the answer. Write it to `/app/answer.json`:
 ```
 
 Follow the Answer format line exactly. The verifier strips whitespace and compares.
-Do not add extra fields, extra names, or a different unit.
+Write JSON numbers as numbers, not strings: `{"answer": 2}` not `{"answer": "2"}`.
+If the format line states an order, sort the list that way.
+If the format line says unique, drop duplicate values.
+Do not add a percent sign, extra words, a year, extra names, or a different unit unless the format line asks for it.
 
 Keep notes in `/app/notes.md` if useful.
 Past session logs are under `/app/sessions/`.

@@ -12,7 +12,7 @@
   {
     "question_id": 848,
     "question": "Please list the year during which the race is held on circuits in Shanghai.",
-    "format": "a JSON list of integers, same order as the query"
+    "format": "a JSON list of unique integers, oldest year first"
   },
   {
     "question_id": 849,
@@ -27,17 +27,17 @@
   {
     "question_id": 851,
     "question": "What positions did constructor Renault achieve in the standings?",
-    "format": "a JSON list of strings, same order as the query"
+    "format": "a JSON list of unique integers, lowest position first"
   },
   {
     "question_id": 852,
     "question": "How many races in the year 2010 are held on grand prixs outside Asia and Europe?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 853,
     "question": "Please give the names of the races held on the circuits in Spain.",
-    "format": "a JSON list of strings, same order as the query"
+    "format": "a JSON list of unique race-name strings, A to Z"
   },
   {
     "question_id": 854,
@@ -52,7 +52,7 @@
   {
     "question_id": 856,
     "question": "Please list the time of the races held on Sepang International Circuit.",
-    "format": "a JSON list of time strings copied from the database; use JSON null for missing times"
+    "format": "a JSON list of unique time strings HH:MM:SS, earliest first; JSON null for missing times (nulls first)"
   },
   {
     "question_id": 857,
@@ -82,7 +82,7 @@
   {
     "question_id": 862,
     "question": "For the Bahrain Grand Prix in 2007, how many drivers not finished the game?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 863,
@@ -92,7 +92,7 @@
   {
     "question_id": 864,
     "question": "For the race happened on 2015/11/29, how many drivers finished the game?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 865,
@@ -187,7 +187,7 @@
   {
     "question_id": 883,
     "question": "How many races were there in 2005? Name all the races in descending order.",
-    "format": "a JSON list of strings, same order as the query"
+    "format": "a JSON list of race-name strings, Z to A (descending alphabetical by name)"
   },
   {
     "question_id": 884,
@@ -222,7 +222,7 @@
   {
     "question_id": 890,
     "question": "How many seasons has Silverstone Circuit hosted the United Kindom grand prix?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 891,
@@ -287,7 +287,7 @@
   {
     "question_id": 903,
     "question": "How many times did Michael Schumacher won from races hosted in Sepang International Circuit?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 904,
@@ -317,7 +317,7 @@
   {
     "question_id": 909,
     "question": "Among all European Grand Prix races, what is the percentage of the races were hosted in Germany?",
-    "format": "a single string"
+    "format": "a JSON number to two decimal digits, rounded down; no percent sign"
   },
   {
     "question_id": 910,
@@ -342,7 +342,7 @@
   {
     "question_id": 914,
     "question": "How many drivers don't have a code?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 915,
@@ -372,7 +372,7 @@
   {
     "question_id": 920,
     "question": "Please list all the years that Silverstone Circuit was used in a Formula_1 race.",
-    "format": "a JSON list of integers, same order as the query"
+    "format": "a JSON list of unique integers, oldest year first"
   },
   {
     "question_id": 921,
@@ -387,12 +387,12 @@
   {
     "question_id": 923,
     "question": "How many Formula_1 races took place on the circuits in Italy?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 924,
     "question": "Please list the exact dates on which a Formula_1 race took place on the Barcelona-Catalunya circuit.",
-    "format": "a JSON list of date strings YYYY-MM-DD"
+    "format": "a JSON list of date strings YYYY-MM-DD, oldest date first"
   },
   {
     "question_id": 925,
@@ -417,7 +417,7 @@
   {
     "question_id": 929,
     "question": "Please list the Formula_1 races that Lewis Hamilton participated.",
-    "format": "a JSON list of strings, same order as the query"
+    "format": "a JSON list of unique race-name strings, A to Z"
   },
   {
     "question_id": 930,
@@ -432,12 +432,12 @@
   {
     "question_id": 932,
     "question": "In which years did Lewis Hamilton participate in a Formula_1 race?",
-    "format": "a JSON list of integers, same order as the query"
+    "format": "a JSON list of unique integers, oldest year first"
   },
   {
     "question_id": 933,
     "question": "What was Lewis Hamilton's final rank in the 2008 Chinese Grand Prix?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 934,
@@ -467,7 +467,7 @@
   {
     "question_id": 939,
     "question": "How many drivers from the UN participated in the 2008 Australian Grand Prix?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 940,
@@ -477,7 +477,7 @@
   {
     "question_id": 941,
     "question": "How many points did Lewis Hamilton get in total in all the Formula_1 races he participated?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 942,
@@ -497,7 +497,7 @@
   {
     "question_id": 945,
     "question": "How many circuits are there in Adelaide, Australia?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 946,
@@ -507,12 +507,12 @@
   {
     "question_id": 947,
     "question": "How many British drivers were born after 1980?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 948,
     "question": "What are the maximum points of British constructors?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 949,
@@ -537,7 +537,7 @@
   {
     "question_id": 953,
     "question": "How many French constructors have a lap number of over 50?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 954,
@@ -587,7 +587,7 @@
   {
     "question_id": 963,
     "question": "How many French drivers who obtain the laptime less than 02:00.00?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 964,
@@ -607,7 +607,7 @@
   {
     "question_id": 967,
     "question": "State code numbers of top 3 youngest drivers. How many Netherlandic drivers among them?",
-    "format": "a JSON list of rows; each row is [code (3-letter driver code), dutch_count (integer)]"
+    "format": "a JSON list of rows sorted by code A to Z; each row is [code (3-letter string), dutch_count (JSON integer)]"
   },
   {
     "question_id": 968,
@@ -617,12 +617,12 @@
   {
     "question_id": 969,
     "question": "How many British drivers who were born in 1980?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 970,
     "question": "List the top 3 German drivers who were born from 1980\u20131990 with the fastest lap time.",
-    "format": "a JSON list of rows; each row is [driverId (integer), driver_name (string), best_lap_ms (string)]"
+    "format": "a JSON list of rows, fastest lap first; each row is [driverId (JSON integer), driver_name (string), best_lap_ms (JSON integer)]"
   },
   {
     "question_id": 971,
@@ -662,7 +662,7 @@
   {
     "question_id": 978,
     "question": "List the circuits in Austria along with their location and coordinates.",
-    "format": "a JSON list of rows; each row is [location (string), lat (number), lng (number)]"
+    "format": "a JSON list of unique rows, location A to Z; each row is [location (string), lat (number), lng (number)]; no duplicate rows"
   },
   {
     "question_id": 979,
@@ -682,7 +682,7 @@
   {
     "question_id": 982,
     "question": "How many American drivers have puncture status.",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 983,
@@ -742,7 +742,7 @@
   {
     "question_id": 994,
     "question": "Which constructor scored most points from Monaco Grand Prix between 1980 and 2010? List the score, name and nationality of this team.",
-    "format": "a JSON list of cells in this order: SUM(T1.points) (string), name (string), nationality (string)"
+    "format": "a JSON list of three cells: points (JSON number), name (string), nationality (string)"
   },
   {
     "question_id": 995,
@@ -772,7 +772,7 @@
   {
     "question_id": 1000,
     "question": "Which racetrack hosted the most recent race? Indicate the full location.",
-    "format": "a single string"
+    "format": "a single string Location, Country (for example Abu Dhabi, UAE); do not include the circuit name"
   },
   {
     "question_id": 1001,
@@ -787,7 +787,7 @@
   {
     "question_id": 1003,
     "question": "How many accidents did the driver who had the highest number accidents in the Canadian Grand Prix have?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 1004,
@@ -847,7 +847,7 @@
   {
     "question_id": 1015,
     "question": "In which Formula_1 race was the lap record for the Austrian Grand Prix Circuit set?",
-    "format": "a single string"
+    "format": "the race name only (for example Austrian Grand Prix); do not include the year"
   },
   {
     "question_id": 1016,
@@ -857,7 +857,7 @@
   {
     "question_id": 1017,
     "question": "Please list the location coordinates of the circuits whose lap record is 1:29.488.",
-    "format": "a JSON list of [latitude, longitude] pairs"
+    "format": "a JSON list of unique [latitude, longitude] pairs, sorted by latitude then longitude; no duplicates"
   },
   {
     "question_id": 1018,

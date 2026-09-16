@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import importlib.util
+import json
+import sqlite3
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -53,6 +55,25 @@ def test_one_row_collapses() -> None:
     gold = [["UK", "Kent"]]
     assert f1.answers_match(["UK", "Kent"], gold)
     assert not f1.answers_match(["UK", "Brands Hatch", "Kent"], gold)
+
+
+def test_shape_formats_match_gold_sql() -> None:
+    data = ROOT / "tasks" / "database-analytics" / "environment" / "data"
+    questions = {q["question_id"]: q for q in json.loads((data / "questions.json").read_text())}
+    gold = {g["question_id"]: g for g in json.loads((data / "gold.json").read_text())}
+    con = sqlite3.connect(f"file:{data / 'formula_1.sqlite'}?mode=ro", uri=True)
+
+    assert questions[852]["format"] == "a JSON integer (not a string)"
+    assert "oldest year first" in questions[848]["format"]
+    assert "Z to A" in questions[883]["format"]
+    assert "two decimal digits, rounded down" in questions[909]["format"]
+
+    years = [r[0] for r in con.execute(gold[848]["SQL"]).fetchall()]
+    assert years == sorted(years)
+    names = [r[0] for r in con.execute(gold[883]["SQL"]).fetchall()]
+    assert names == sorted(names, reverse=True)
+    pct = con.execute(gold[909]["SQL"]).fetchone()[0]
+    assert pct == 52.17
 
 
 if __name__ == "__main__":
