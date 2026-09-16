@@ -12,18 +12,21 @@ db query "<sql>"
 `db query` runs one read-only SQL statement and prints JSON rows.
 Use ordinary SQL to inspect tables (for example `sqlite_master` and `PRAGMA`).
 
-Read `/app/question.md`. It has the question and an **Answer format** line.
-Find the answer. Write it to `/app/answer.json`:
+Read `/app/question.md`. It has the question and a **Required output** block.
+The only scored file is `/app/answer.json`. Write exactly one JSON object:
 
 ```json
-{ "answer": ... }
+{"answer": <value>}
 ```
 
-Follow the Answer format line exactly. The verifier strips whitespace and compares.
-Write JSON numbers as numbers, not strings: `{"answer": 2}` not `{"answer": "2"}`.
-If the format line states an order, sort the list that way.
-If the format line says unique, drop duplicate values.
-Do not add a percent sign, extra words, a year, extra names, or a different unit unless the format line asks for it.
+The Required output block states the value. Follow it exactly.
+
+- Integer: `{"answer": 2}` not `{"answer": "2"}`
+- Unique list: drop duplicates and sort as the block says
+- Rounded number: two decimal digits, rounded down, no percent sign, unless the block says otherwise
+- Do not add extra fields, extra names, a year, or a different unit
+
+The verifier strips whitespace and compares.
 
 Keep notes in `/app/notes.md` if useful.
 Past session logs are under `/app/sessions/`.

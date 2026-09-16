@@ -22,7 +22,7 @@
   {
     "question_id": 850,
     "question": "Please give the name of the race held on the circuits in Germany.",
-    "format": "a JSON list of strings, same order as the query"
+    "format": "a JSON list of unique race-name strings, A to Z"
   },
   {
     "question_id": 851,
@@ -127,7 +127,7 @@
   {
     "question_id": 871,
     "question": "For the driver who had the Q2 time as 0:01:15 in race No. 347, where is he from?",
-    "format": "a JSON list of strings, same order as the query"
+    "format": "a JSON list of unique nationality strings, A to Z; no duplicate values"
   },
   {
     "question_id": 872,
@@ -472,7 +472,7 @@
   {
     "question_id": 940,
     "question": "How many drivers finished the race in the 2008 Chinese Grand Prix?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 941,
@@ -542,12 +542,12 @@
   {
     "question_id": 954,
     "question": "Please calculate the race completion percentage of Japanese drivers from 2007 to 2009.",
-    "format": "a single string"
+    "format": "a JSON number to two decimal digits, rounded down; no percent sign"
   },
   {
     "question_id": 955,
     "question": "What is the average time in seconds of champion for each year, before year 1975?",
-    "format": "a JSON list of rows; each row is [year (integer), AVG(time_seconds) (number)]"
+    "format": "a JSON list of rows, oldest year first; each row is [year (integer), average seconds (JSON number)]"
   },
   {
     "question_id": 956,
@@ -592,7 +592,7 @@
   {
     "question_id": 964,
     "question": "List out the code for drivers who have nationality in America.",
-    "format": "a JSON list of 3-letter driver codes"
+    "format": "a JSON list of unique 3-letter driver codes, A to Z"
   },
   {
     "question_id": 965,
@@ -602,7 +602,7 @@
   {
     "question_id": 966,
     "question": "How many driver participated in race ID number 18?",
-    "format": "a single string"
+    "format": "a JSON integer (not a string)"
   },
   {
     "question_id": 967,

@@ -4,7 +4,7 @@ Evaluate how an agent queries a Formula 1 SQLite database (BIRD-SQL `formula_1`,
 
 The dataset is in `environment/data/`: `formula_1.sqlite`, `questions.json`, and `gold.json`. Harbor steps and `task.toml` are in git. `alb smoke` keeps the first 10 steps.
 
-Each `question.md` has an **Answer format** line. The verifier strips whitespace and compares `answer.json` to the gold SQL result.
+Each `question.md` has a **Required output** block for `/app/answer.json`. The verifier strips whitespace and compares that file to the gold SQL result.
 
 Needs `OPENAI_API_KEY`. Use the OpenAI id `gpt-5.6-luna` (dot, not hyphen).
 

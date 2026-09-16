@@ -67,13 +67,25 @@ def test_shape_formats_match_gold_sql() -> None:
     assert "oldest year first" in questions[848]["format"]
     assert "Z to A" in questions[883]["format"]
     assert "two decimal digits, rounded down" in questions[909]["format"]
+    assert questions[940]["format"] == "a JSON integer (not a string)"
+    assert questions[966]["format"] == "a JSON integer (not a string)"
+    assert "A to Z" in questions[850]["format"]
+    assert "A to Z" in questions[964]["format"]
+    assert "two decimal digits, rounded down" in questions[954]["format"]
+    assert "oldest year first" in questions[955]["format"]
 
     years = [r[0] for r in con.execute(gold[848]["SQL"]).fetchall()]
     assert years == sorted(years)
     names = [r[0] for r in con.execute(gold[883]["SQL"]).fetchall()]
     assert names == sorted(names, reverse=True)
+    codes = [r[0] for r in con.execute(gold[964]["SQL"]).fetchall()]
+    assert codes == sorted(codes)
     pct = con.execute(gold[909]["SQL"]).fetchone()[0]
     assert pct == 52.17
+    jp = con.execute(gold[954]["SQL"]).fetchone()[0]
+    assert jp == 29.03
+    germany = [r[0] for r in con.execute(gold[850]["SQL"]).fetchall()]
+    assert germany == sorted(germany)
 
 
 if __name__ == "__main__":

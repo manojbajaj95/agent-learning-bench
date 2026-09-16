@@ -17,7 +17,7 @@
   },
   {
     "question_id": 850,
-    "SQL": "SELECT DISTINCT T2.name FROM circuits AS T1 INNER JOIN races AS T2 ON T2.circuitID = T1.circuitId WHERE T1.country = 'Germany'"
+    "SQL": "SELECT DISTINCT T2.name FROM circuits AS T1 INNER JOIN races AS T2 ON T2.circuitID = T1.circuitId WHERE T1.country = 'Germany' ORDER BY T2.name ASC"
   },
   {
     "question_id": 851,
@@ -101,7 +101,7 @@
   },
   {
     "question_id": 871,
-    "SQL": "SELECT DISTINCT T2.nationality FROM qualifying AS T1 INNER JOIN drivers AS T2 ON T2.driverId = T1.driverId WHERE T1.raceId = 347 AND T1.q2 LIKE '1:15%'"
+    "SQL": "SELECT DISTINCT T2.nationality FROM qualifying AS T1 INNER JOIN drivers AS T2 ON T2.driverId = T1.driverId WHERE T1.raceId = 347 AND T1.q2 LIKE '1:15%' ORDER BY T2.nationality ASC"
   },
   {
     "question_id": 872,
@@ -433,11 +433,11 @@
   },
   {
     "question_id": 954,
-    "SQL": "SELECT CAST(SUM(IIF(T1.time IS NOT NULL, 1, 0)) AS REAL) * 100 / COUNT(T1.raceId) FROM results AS T1 INNER JOIN races AS T2 on T1.raceId = T2.raceId INNER JOIN drivers AS T3 on T1.driverId = T3.driverId WHERE T3.nationality = 'Japanese' AND T2.year BETWEEN 2007 AND 2009"
+    "SQL": "SELECT FLOOR((CAST(SUM(IIF(T1.time IS NOT NULL, 1, 0)) AS REAL) * 100 / COUNT(T1.raceId)) * 100) / 100.0 FROM results AS T1 INNER JOIN races AS T2 on T1.raceId = T2.raceId INNER JOIN drivers AS T3 on T1.driverId = T3.driverId WHERE T3.nationality = 'Japanese' AND T2.year BETWEEN 2007 AND 2009"
   },
   {
     "question_id": 955,
-    "SQL": "WITH champion_times AS ( SELECT T2.year, CASE WHEN INSTR(T1.time, ':') = 2 THEN CAST(SUBSTR(T1.time, 1, 1) AS REAL) * 3600 + CAST(SUBSTR(T1.time, 3, 2) AS REAL) * 60 + CAST(SUBSTR(T1.time, 6, 2) AS REAL) + CAST(SUBSTR(T1.time, 9) AS REAL) / 1000 WHEN INSTR(T1.time, ':') = 3 THEN CAST(SUBSTR(T1.time, 1, 2) AS REAL) * 3600 + CAST(SUBSTR(T1.time, 4, 2) AS REAL) * 60 + CAST(SUBSTR(T1.time, 7, 2) AS REAL) + CAST(SUBSTR(T1.time, 10) AS REAL) / 1000 END AS time_seconds FROM results AS T1 INNER JOIN races AS T2 ON T1.raceId = T2.raceId WHERE T1.positionOrder = 1 AND T1.time IS NOT NULL AND T2.year < 1975 ) SELECT year, AVG(time_seconds) FROM champion_times GROUP BY year HAVING AVG(time_seconds) IS NOT NULL"
+    "SQL": "WITH champion_times AS ( SELECT T2.year, CAST(SUBSTR(T1.time, 1, INSTR(T1.time, ':') - 1) AS REAL) * 3600 + CAST(SUBSTR(T1.time, INSTR(T1.time, ':') + 1, 2) AS REAL) * 60 + CAST(SUBSTR(T1.time, INSTR(T1.time, ':') + 4) AS REAL) AS time_seconds FROM results AS T1 INNER JOIN races AS T2 ON T1.raceId = T2.raceId WHERE T1.positionOrder = 1 AND T1.time IS NOT NULL AND T2.year < 1975 ) SELECT year, AVG(time_seconds) FROM champion_times GROUP BY year HAVING AVG(time_seconds) IS NOT NULL ORDER BY year ASC"
   },
   {
     "question_id": 956,
@@ -473,7 +473,7 @@
   },
   {
     "question_id": 964,
-    "SQL": "SELECT code FROM drivers WHERE Nationality = 'American' AND code IS NOT NULL AND TRIM(code) != ''"
+    "SQL": "SELECT code FROM drivers WHERE Nationality = 'American' AND code IS NOT NULL AND TRIM(code) != '' ORDER BY code ASC"
   },
   {
     "question_id": 965,

@@ -69,7 +69,10 @@ def cmd_publish(index: str) -> None:
     fmt = (item.get("format") or "").strip()
     text = f"Question {n} of {len(questions)}\n\n{item['question']}\n"
     if fmt:
-        text += f"\nAnswer format: {fmt}\n"
+        text += (
+            "\nRequired output in /app/answer.json:\n"
+            '{"answer": <' + fmt + ">}\n"
+        )
     QUESTION_PATH.write_text(text)
     if ANSWER_PATH.exists():
         ANSWER_PATH.unlink()
