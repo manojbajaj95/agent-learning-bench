@@ -109,14 +109,11 @@ def test_slice_keeps_first_n(tmp_path: Path) -> None:
 
 
 def test_generate_n_flag() -> None:
-    qa = ROOT / "tasks" / "codebase-qa" / "generate_steps.py"
     poker = ROOT / "tasks" / "poker" / "generate_steps.py"
-    assert script_has_flag(qa, "--n")
-    assert script_has_flag(qa, "--all")
     assert not script_has_flag(poker, "--n")
     assert needs_slice(ROOT / "tasks" / "poker", 10)
     assert needs_slice(ROOT / "tasks" / "database-analytics", 10)
-    assert not needs_slice(ROOT / "tasks" / "codebase-qa", 10)
+    assert needs_slice(ROOT / "tasks" / "codebase-qa", 10)
 
 
 def test_systems_toml_is_source() -> None:

@@ -1,0 +1,518 @@
+schema_version = "1.4"
+artifacts = ["/app/answer.json", "/app/question.md", "/app/notes.md", "/app/sessions"]
+multi_step_reward_strategy = "mean"
+
+[task]
+name = "agent-learning-bench/codebase-qa"
+version = "0.1.0"
+description = "Multi-step Flask repository question answering"
+keywords = ["codebase", "flask", "qa", "rewardkit", "multi-step"]
+
+[[task.authors]]
+name = "Manoj Bajaj"
+email = "manoj@example.com"
+
+[metadata]
+difficulty = "hard"
+category = "programming"
+tags = ["codebase", "multi-step", "learning"]
+
+[agent]
+timeout_sec = 180.0
+user = "agent"
+
+[verifier]
+timeout_sec = 180.0
+
+[verifier.env]
+OPENAI_API_KEY = "${OPENAI_API_KEY}"
+
+[environment]
+network_mode = "public"
+build_timeout_sec = 600.0
+cpus = 1
+memory_mb = 2048
+storage_mb = 10240
+gpus = 0
+workdir = "/app"
+
+
+[[steps]]
+name = "q-001"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-002"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-003"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-004"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-005"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-006"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-007"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-008"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-009"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-010"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-011"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-012"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-013"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-014"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-015"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-016"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-017"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-018"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-019"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-020"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-021"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-022"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-023"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-024"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-025"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-026"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-027"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-028"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-029"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-030"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-031"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-032"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-033"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-034"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-035"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-036"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-037"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-038"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-039"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-040"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-041"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-042"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-043"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-044"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-045"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-046"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-047"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
+
+[[steps]]
+name = "q-048"
+
+[steps.agent]
+timeout_sec = 180.0
+
+[steps.verifier]
+timeout_sec = 180.0
+
