@@ -3,31 +3,32 @@
 Evaluate how an agent answers questions about one frozen company wiki
 (EnterpriseRAG-Bench Confluence, 64 confluence-only questions).
 
-The wiki dump and question bank are not in git. Download them, then generate
-Harbor steps. Harbor cannot run a slice of one task: `--n` sets how many steps
+The dump is in `data/`: `questions.jsonl` and two Confluence zip files
+(~5,189 pages). Patch gold in `questions.jsonl` (`gold_answer`). Patch wiki
+pages in the zip files. Then generate Harbor steps.
+
+Harbor cannot run a slice of one task: `--n` sets how many steps
 `generate_steps.py` writes. The wiki stays the full Confluence slice either way.
 
 Needs `OPENAI_API_KEY`. Use the OpenAI id `gpt-5.6-luna` (dot, not hyphen).
 
-## Download
+## Generate steps
 
 From the repo root:
-
-```bash
-./tasks/corpus/download.sh
-```
-
-This writes `tasks/corpus/data/questions.jsonl` and two Confluence zip files
-(~5,189 pages). Do not commit that folder.
-
-Then build steps (this also copies data into `environment/data/` for Docker):
 
 ```bash
 python3 tasks/corpus/generate_steps.py --n 10   # smoke
 python3 tasks/corpus/generate_steps.py --all    # all 64 confluence-only questions
 ```
 
-`steps/` and `task.toml` are generated. They are gitignored.
+This copies the dump into `environment/data/` for Docker. `steps/` and
+`task.toml` are generated. They are gitignored.
+
+To replace the upstream dump:
+
+```bash
+./tasks/corpus/download.sh
+```
 
 Each step is scored by an LLM judge (`openai/gpt-5.6-luna`). The judge sees the
 question, the agent answer, and a hidden gold answer. Paraphrase can still
