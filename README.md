@@ -1,5 +1,5 @@
 # Agent Learning Bench
-
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/manojbajaj95/agent-learning-bench)
 > We define AGI as a system that can match the learning efficiency of humans.
 >
 > [ARC Prize](https://arcprize.org/)
