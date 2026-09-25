@@ -39,8 +39,9 @@ Harbor averages the per-question reward (`multi_step_reward_strategy = "mean"`).
 | `correctness` | Same judge score |
 | `tool_calls` | Tool calls in the step trajectory |
 | `tokens` | Prompt tokens plus completion tokens in that trajectory |
+| `files_opened` | Distinct `/data/repo/...` paths in the agent log |
 
-Harbor also records `cost_usd`, input tokens, output tokens, and step duration. File opens are not a separate field yet.
+Harbor also records `cost_usd`, input tokens, output tokens, and step duration.
 
 ## Running
 

@@ -46,7 +46,7 @@ Harbor averages the per-question reward (`multi_step_reward_strategy = "mean"`).
 |---|---|
 | `reward` | Judge score for the answer |
 | `correctness` | Same judge score |
-| `files_opened` | Distinct `/data/corpus/...` paths in the trajectory |
+| `files_opened` | Distinct `/data/corpus/...` paths in `pi.txt` or `trajectory.json` |
 | `tool_calls` | Tool calls in the step trajectory |
 | `tokens` | Prompt tokens plus completion tokens in that trajectory |
 

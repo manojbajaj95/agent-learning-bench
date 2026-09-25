@@ -48,7 +48,7 @@ The trial score is the agent's chip total after the last hand (`multi_step_rewar
 | `hands_done` | Hands finished |
 | `completed` | 1 when the hand settled |
 
-Harbor records `cost_usd`, input tokens, output tokens, and step duration. The task does not yet write an action count into the reward file.
+Harbor records `cost_usd`, input tokens, output tokens, and step duration. `env_actions` is the number of `poker act` commands in that hand.
 
 ## Layout
 

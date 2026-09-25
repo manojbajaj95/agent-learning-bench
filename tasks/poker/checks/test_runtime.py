@@ -11,5 +11,7 @@ def test_fold_and_settle(tmp_path: Path):
     runtime.command(["act", "fold"])
     metrics = runtime.settle(1)
     assert metrics["chips"] == START_STACK - 5
+    assert metrics["reward"] == START_STACK - 5
+    assert metrics["env_actions"] == 1
     assert (tmp_path / "verifier" / "reward.txt").read_text().strip() == str(START_STACK - 5)
     assert "Hand 2" in runtime.command(["status"])

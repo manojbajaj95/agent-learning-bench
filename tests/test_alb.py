@@ -18,9 +18,10 @@ from alb.bench import (
     slice_task,
     system_names,
     system_spec,
+    task_is_ready,
 )
 from alb.cli import app
-from alb.report import svg_lines, summarize_trial
+from alb.report import collect_run, svg_lines, summarize_trial
 
 runner = CliRunner()
 
@@ -47,6 +48,7 @@ def test_icl_cmd_resumes() -> None:
         "pi",
     ]
     assert "--resume-trajectory" in cmd
+    assert "--yes" not in cmd
     assert "-m" in cmd
     assert "agents.pi_sessions:PiSessionsAgent" not in cmd
 
@@ -106,6 +108,36 @@ def test_slice_keeps_first_n(tmp_path: Path) -> None:
     text = (dest / "task.toml").read_text()
     assert text.count("[[steps]]") == 10
     assert "turn-11" not in text
+
+
+def test_prepare_skips_ready_task() -> None:
+    assert task_is_ready(ROOT / "tasks" / "tally")
+    result = runner.invoke(app, ["prepare", "tally", "--dry-run"])
+    assert result.exit_code == 0
+    assert "skip generate" in result.stdout
+    assert "generate_steps.py" not in result.stdout
+
+
+def test_smoke_slices_without_rewriting() -> None:
+    result = runner.invoke(app, ["smoke", "report-check", "--system", "baseline", "--dry-run"])
+    assert result.exit_code == 0
+    assert ".alb/smoke/report-check" in result.stdout
+    assert "generate_steps.py --n" not in result.stdout
+
+
+def test_report_reads_one_run(tmp_path: Path) -> None:
+    job = tmp_path / "tally-baseline"
+    trial = job / "tally__abc"
+    trial.mkdir(parents=True)
+    (trial / "result.json").write_text(
+        '{"trial_name":"t","task_name":"tally","step_results":[]}'
+    )
+    other = tmp_path / "tally-icl" / "tally__def"
+    other.mkdir(parents=True)
+    (other / "result.json").write_text('{"trial_name":"other","step_results":[]}')
+    rows = collect_run(job)
+    assert len(rows) == 1
+    assert rows[0]["job"] == "tally-baseline"
 
 
 def test_generate_n_flag() -> None:

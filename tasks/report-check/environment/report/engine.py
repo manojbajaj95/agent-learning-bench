@@ -20,6 +20,7 @@ BRIEFS_PATH = HERE / "briefs.json"
 APP = Path(os.environ.get("REPORT_APP", "/app"))
 STATE_DIR = Path(os.environ.get("REPORT_STATE_DIR", "/opt/report/state"))
 REWARD_PATH = Path(os.environ.get("REPORT_REWARD", "/logs/verifier/reward.txt"))
+REWARD_JSON = Path(os.environ.get("REPORT_REWARD_JSON", "/logs/verifier/reward.json"))
 
 BRIEF_PATH = APP / "brief.md"
 REPORT_PATH = APP / "report.md"
@@ -607,6 +608,18 @@ def cmd_settle() -> str:
     }
     REWARD_PATH.parent.mkdir(parents=True, exist_ok=True)
     REWARD_PATH.write_text(f"{reward}\n", encoding="utf-8")
+    violations = 0 if first is None else len(first)
+    REWARD_JSON.write_text(
+        json.dumps(
+            {
+                "reward": reward,
+                "iterations": state["submissions"],
+                "rule_violations": violations,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     LEDGER_PATH.parent.mkdir(parents=True, exist_ok=True)
     with LEDGER_PATH.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(row) + "\n")

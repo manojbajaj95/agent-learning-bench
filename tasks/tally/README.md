@@ -35,7 +35,7 @@ Compare baseline and in-context learning on the same deck order.
 
 Each turn scores 1 for a color match and 0 for a miss. Harbor averages the twelve scores (`multi_step_reward_strategy = "mean"`). The points sum is that mean times 12.
 
-`steps/*/tests/test.sh` reveals the card and writes `/logs/verifier/reward.txt`. It does not write a cost field.
+`steps/*/tests/test.sh` reveals the card and writes `/logs/verifier/reward.txt` plus `reward.json` with `reward`, `tool_calls`, and `tokens`.
 
 Harbor records these costs on the job:
 
@@ -74,7 +74,7 @@ alb run tally --system icl
 ## Reporting
 
 ```bash
-alb report --task tally
+alb report tally-baseline
 ```
 
 Writes `reports/latest.md`, `reports/latest.html`, and SVG charts for reward, cost, and tokens.

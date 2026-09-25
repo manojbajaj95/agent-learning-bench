@@ -77,7 +77,7 @@ alb prepare database-analytics
 alb smoke database-analytics --system baseline
 alb run database-analytics --system icl
 alb upload database-analytics-icl
-alb report --task database-analytics
+alb report database-analytics-icl
 ```
 
 Systems come from [`systems.toml`](systems.toml). Smoke is the first 10 steps. `prepare` skips `download.sh` when `data/` already has files. Extra Harbor flags go after `--`.
@@ -98,7 +98,7 @@ During the step, the agent can tell whether an answer or action is correct and c
 
 If the environment has a grader, cap or penalize calls so that brute-force search does not replace learning.
 
-Examples: Tally, Poker, Affinity Arena, Report check, and Courier / Picker.
+Examples: Tally, Poker, Affinity Arena, and Report check.
 
 ### Non-verifiable
 
@@ -132,7 +132,7 @@ Give the task one learning object and enough steps that a curve can show a trend
 
 ## Tasks
 
-All tasks are runnable except Courier / Picker and Sokoban, which are designs only.
+All tasks are runnable except Sokoban, which is a design only.
 
 | Task | Domain | Learning object |
 |---|---|---|
@@ -141,7 +141,6 @@ All tasks are runnable except Courier / Picker and Sokoban, which are designs on
 | [Affinity Arena](tasks/affinity-arena/) | Verifiable | A hidden affinity chart across twenty battles |
 | [Report check](tasks/report-check/) | Verifiable | An unpublished house style guide, learned from review comments |
 | [Programming language](tasks/programming-language/) | Verifiable | One generated language, learned through interpreter feedback across twenty programming problems |
-| [Courier / Picker](tasks/courier-picker/) | Verifiable | A fixed spatial map (design only) |
 | [Corpus](tasks/corpus/) | Non-verifiable | A frozen Confluence wiki map |
 | [Codebase Q&A](tasks/codebase-qa/) | Non-verifiable | Flask hierarchy and call patterns |
 | [Database analytics](tasks/database-analytics/) | Non-verifiable | Formula 1 schema and query patterns |

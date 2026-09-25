@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -14,7 +15,9 @@ STEP_PATH = Path("/app/.step.txt")
 QUESTION_PATH = Path("/app/question.md")
 ANSWER_PATH = Path("/app/answer.json")
 TRAJECTORY_PATH = Path("/logs/agent/trajectory.json")
+PI_LOG_PATH = Path("/logs/agent/pi.txt")
 REWARD_PATH = Path("/logs/verifier/reward.json")
+FILE_RE = re.compile(r"/data/repo/[^\s\"']+")
 
 
 def cmd_publish(index: str) -> None:
@@ -36,24 +39,54 @@ def cmd_write_reference() -> None:
     REFERENCE_PATH.chmod(0o600)
 
 
-def _trajectory_metrics() -> tuple[int, int]:
-    if not TRAJECTORY_PATH.exists():
-        return 0, 0
-    data = json.loads(TRAJECTORY_PATH.read_text())
-    final = data.get("final_metrics") or {}
-    tokens = int(final.get("total_prompt_tokens") or 0) + int(
-        final.get("total_completion_tokens") or 0
-    )
-    tool_calls = 0
-    for step in data.get("steps") or []:
-        tool_calls += len(step.get("tool_calls") or [])
-    if not tool_calls:
-        tool_calls = int(final.get("total_steps") or 0)
-    return tool_calls, tokens
+def _agent_log() -> str:
+    if TRAJECTORY_PATH.is_file():
+        return TRAJECTORY_PATH.read_text()
+    if PI_LOG_PATH.is_file():
+        return PI_LOG_PATH.read_text(errors="replace")
+    return ""
+
+
+def _pi_tokens(text: str) -> int:
+    total = 0
+    for line in text.splitlines():
+        if '"message_end"' not in line:
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if event.get("type") != "message_end":
+            continue
+        usage = (event.get("message") or {}).get("usage") or {}
+        total += int(usage.get("totalTokens") or 0)
+    return total
+
+
+def _trajectory_metrics() -> tuple[int, int, int]:
+    text = _agent_log()
+    if not text:
+        return 0, 0, 0
+    files_opened = len(set(FILE_RE.findall(text)))
+    if TRAJECTORY_PATH.is_file():
+        data = json.loads(text)
+        final = data.get("final_metrics") or {}
+        tokens = int(final.get("total_prompt_tokens") or 0) + int(
+            final.get("total_completion_tokens") or 0
+        )
+        tool_calls = 0
+        for step in data.get("steps") or []:
+            tool_calls += len(step.get("tool_calls") or [])
+        if not tool_calls:
+            tool_calls = int(final.get("total_steps") or 0)
+        return tool_calls, tokens, files_opened
+    tool_calls = text.count('"type":"tool_execution_start"')
+    tool_calls += text.count('"type": "tool_execution_start"')
+    return tool_calls, _pi_tokens(text), files_opened
 
 
 def cmd_costs() -> None:
-    tool_calls, tokens = _trajectory_metrics()
+    tool_calls, tokens, files_opened = _trajectory_metrics()
     REWARD_PATH.parent.mkdir(parents=True, exist_ok=True)
     rewards = {}
     if REWARD_PATH.exists():
@@ -63,6 +96,7 @@ def cmd_costs() -> None:
             rewards = {}
     rewards["tool_calls"] = float(tool_calls)
     rewards["tokens"] = float(tokens)
+    rewards["files_opened"] = float(files_opened)
     REWARD_PATH.write_text(json.dumps(rewards) + "\n")
 
 

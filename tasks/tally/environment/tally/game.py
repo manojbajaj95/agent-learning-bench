@@ -15,6 +15,8 @@ LAST_PATH = STATE_DIR / "last.txt"
 LOG_PATH = STATE_DIR / "log.jsonl"
 VIEW_PATH = Path("/app/view.txt")
 REWARD_PATH = Path("/logs/verifier/reward.txt")
+REWARD_JSON = Path("/logs/verifier/reward.json")
+PI_LOG_PATH = Path("/logs/agent/pi.txt")
 COLORS = ("red", "blue", "yellow")
 TURNS = 12
 
@@ -114,6 +116,27 @@ def cmd_score(bet_path: str) -> None:
         )
 
     REWARD_PATH.write_text(f"{hit}\n")
+    text = PI_LOG_PATH.read_text(errors="replace") if PI_LOG_PATH.is_file() else ""
+    tool_calls = text.count('"type":"tool_execution_start"')
+    tool_calls += text.count('"type": "tool_execution_start"')
+    tokens = 0
+    for line in text.splitlines():
+        if '"message_end"' not in line:
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if event.get("type") != "message_end":
+            continue
+        usage = (event.get("message") or {}).get("usage") or {}
+        tokens += int(usage.get("totalTokens") or 0)
+    REWARD_JSON.write_text(
+        json.dumps(
+            {"reward": hit, "tool_calls": tool_calls, "tokens": tokens}
+        )
+        + "\n"
+    )
     print(f"drawn={drawn} bet={color or '(invalid)'} hit={hit}")
 
 

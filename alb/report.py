@@ -165,28 +165,13 @@ def summarize_trial(result: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _task_matches(summary: dict[str, Any], task_filter: str | None) -> bool:
-    if not task_filter:
-        return True
-    needle = task_filter.lower()
-    name = (summary.get("task_name") or "").lower()
-    trial = (summary.get("trial_name") or "").lower()
-    return needle in name or needle in trial
-
-
-def collect_trials(
-    jobs_dir: Path,
-    task_filter: str | None,
-    job_filter: str | None = None,
-) -> list[dict[str, Any]]:
+def collect_run(job_dir: Path) -> list[dict[str, Any]]:
+    """Load the trials in one task run (a Harbor job directory)."""
     rows: list[dict[str, Any]] = []
-    if not jobs_dir.exists():
-        return rows
-    for result_path in sorted(jobs_dir.glob("*/*/result.json")):
-        rel = result_path.relative_to(jobs_dir)
-        job_name = rel.parts[0]
-        if job_filter and job_filter.lower() not in job_name.lower():
-            continue
+    paths = sorted(job_dir.glob("*/result.json"))
+    if not paths and (job_dir / "result.json").is_file():
+        paths = [job_dir / "result.json"]
+    for result_path in paths:
         try:
             data = json.loads(result_path.read_text())
         except (OSError, json.JSONDecodeError):
@@ -194,10 +179,9 @@ def collect_trials(
         if "trial_name" not in data and "step_results" not in data:
             continue
         summary = summarize_trial(data)
-        summary["job"] = job_name
+        summary["job"] = job_dir.name
         summary["result_path"] = str(result_path)
-        if _task_matches(summary, task_filter):
-            rows.append(summary)
+        rows.append(summary)
     return rows
 
 
@@ -432,19 +416,17 @@ def write_charts(rows: list[dict[str, Any]], out_dir: Path) -> dict[str, Path]:
 
 
 def write_report(
-    jobs_dir: Path,
+    job_dir: Path,
     out_dir: Path,
-    task_filter: str | None = None,
-    job_filter: str | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Path]]:
-    rows = collect_trials(jobs_dir, task_filter, job_filter)
+    rows = collect_run(job_dir)
+    if not rows:
+        raise SystemExit(f"no trial results in {job_dir}")
     out_dir.mkdir(parents=True, exist_ok=True)
     json_path = out_dir / "latest.json"
     md_path = out_dir / "latest.md"
     payload = {
-        "jobs_dir": str(jobs_dir),
-        "task_filter": task_filter,
-        "job_filter": job_filter,
+        "job_dir": str(job_dir),
         "n_trials": len(rows),
         "trials": rows,
     }

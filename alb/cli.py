@@ -18,6 +18,7 @@ from alb.bench import (
     extra_args,
     prepare_task,
     print_systems,
+    resolve_job_dir,
     run_task,
     task_names,
     upload_job,
@@ -135,27 +136,25 @@ def smoke(
 
 @app.command()
 def upload(
-    job: Annotated[
-        Optional[str],
-        typer.Argument(help="Job name or directory; default is the newest job"),
-    ] = None,
+    run: Annotated[str, typer.Argument(help="Task run: job name or job directory")],
     jobs_dir: Annotated[Optional[Path], typer.Option("--jobs-dir")] = None,
     public: Annotated[bool, typer.Option("--public")] = False,
     dry_run: Annotated[bool, typer.Option("--dry-run")] = False,
 ) -> None:
-    """Upload a job directory to Harbor Hub."""
-    upload_job(job, jobs_dir=jobs_dir, public=public, dry_run=dry_run)
+    """Upload one task run to Harbor Hub."""
+    upload_job(run, jobs_dir=jobs_dir, public=public, dry_run=dry_run)
 
 
 @app.command()
 def report(
-    task: Annotated[Optional[str], typer.Option("--task")] = None,
-    job: Annotated[Optional[str], typer.Option("--job")] = None,
+    run: Annotated[str, typer.Argument(help="Task run: job name or job directory")],
     jobs_dir: Annotated[Path, typer.Option("--jobs-dir")] = ROOT / "jobs",
     out_dir: Annotated[Path, typer.Option("--out-dir")] = ROOT / "reports",
 ) -> None:
-    """Write markdown, JSON, HTML, and SVG charts."""
-    rows, written = write_report(jobs_dir, out_dir, task, job)
+    """Build the reward, cost, and token charts for one task run."""
+    given = Path(run)
+    job_dir = given if given.is_dir() else resolve_job_dir(jobs_dir, run)
+    rows, written = write_report(job_dir, out_dir)
     print(render_markdown(rows))
     for path in written.values():
         print(f"Wrote {path}")

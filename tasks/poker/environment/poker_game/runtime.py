@@ -167,6 +167,9 @@ class Runtime:
         elif len(argv) > 1:
             raise ValueError("only raise takes an amount")
         apply_action(match.current, action, raise_to)
+        actions = self.private / "hero_actions.txt"
+        count = int(actions.read_text().strip() or "0") if actions.exists() else 0
+        actions.write_text(f"{count + 1}\n")
         if not match.current.over:
             match = self._fish_until_hero(match)
         self.save(match)
@@ -203,11 +206,18 @@ class Runtime:
     def _emit(self, match: Match, index: int, chips: int | None = None) -> dict:
         if chips is None:
             chips = match.hero
+        actions_path = self.private / "hero_actions.txt"
+        env_actions = (
+            int(actions_path.read_text().strip() or "0") if actions_path.exists() else 0
+        )
+        actions_path.write_text("0\n")
         record = {
+            "reward": chips,
             "chips": chips,
             "profit": chips - START_STACK,
             "hands_done": min(index, match.hand_index),
             "completed": 1,
+            "env_actions": env_actions,
         }
         self.verifier.mkdir(parents=True, exist_ok=True)
         atomic_write(self.verifier / "reward.txt", f"{chips}\n", 0o644)

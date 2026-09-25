@@ -167,9 +167,14 @@ def slice_task(src: Path, dest: Path, n: int) -> Path:
     return dest
 
 
+def task_is_ready(path: Path) -> bool:
+    steps = path / "steps"
+    return (path / "task.toml").is_file() and steps.is_dir() and any(steps.iterdir())
+
+
 def needs_slice(path: Path, n: int | None) -> bool:
-    script = path / "generate_steps.py"
-    return n is not None and (not script.exists() or not script_has_flag(script, "--n"))
+    del path
+    return n is not None
 
 
 def resolve_task_path(path: Path, n: int | None, *, dry_run: bool = False) -> Path:
@@ -212,7 +217,6 @@ def harbor_run_cmd(
         str(timeout),
         "--n-concurrent",
         str(n_concurrent),
-        "--yes",
     ]
     if spec["needs_model"]:
         cmd += ["-m", model]
@@ -264,7 +268,10 @@ def resolve_job_dir(jobs_dir: Path, name: str | None) -> Path:
 def prepare_task(task: str, n: int | None = None, *, force: bool = False, dry_run: bool = False) -> None:
     path = task_dir(task)
     maybe_download(path, force=force, dry_run=dry_run)
-    generate_steps(path, n, dry_run=dry_run)
+    if force or not task_is_ready(path):
+        generate_steps(path, None, dry_run=dry_run)
+    else:
+        print(f"skip generate; {path.name} already has steps")
     if needs_slice(path, n):
         resolve_task_path(path, n, dry_run=dry_run)
 
@@ -289,17 +296,7 @@ def run_task(
     path = task_dir(task)
     if smoke and n is None:
         n = SMOKE_N
-    if n is not None:
-        generate_steps(path, n, dry_run=dry_run)
-        if n and (path / "generate_steps.py").exists() and script_has_flag(
-            path / "generate_steps.py", "--n"
-        ):
-            print(
-                f"note: {path.name}/steps is a {n}-step slice. "
-                f"Run `alb prepare {path.name}` before a full run.",
-                file=sys.stderr,
-            )
-    elif not (path / "task.toml").exists():
+    if not task_is_ready(path):
         generate_steps(path, None, dry_run=dry_run)
     run_path = resolve_task_path(path, n, dry_run=dry_run)
     if not dry_run and not (run_path / "task.toml").exists():
@@ -325,19 +322,22 @@ def run_task(
 
 
 def upload_job(
-    job: str | None = None,
+    run: str,
     *,
     jobs_dir: Path | None = None,
     public: bool = False,
     dry_run: bool = False,
 ) -> None:
+    """Upload one task run. `run` is a job name or a job directory."""
     jobs = jobs_dir or (ROOT / "jobs")
-    if dry_run and job:
-        given = Path(job)
-        job_dir = given if given.is_dir() else jobs / job
+    given = Path(run)
+    if given.is_dir():
+        job_dir = given
+    elif dry_run:
+        job_dir = jobs / run
     else:
-        job_dir = resolve_job_dir(jobs, job)
-    cmd = ["harbor", "upload", str(job_dir), "--yes"]
+        job_dir = resolve_job_dir(jobs, run)
+    cmd = ["harbor", "upload", str(job_dir)]
     if public:
         cmd.append("--public")
     if not dry_run and shutil.which("harbor") is None:

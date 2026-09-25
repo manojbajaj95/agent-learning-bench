@@ -15,6 +15,7 @@ STEP_PATH = Path("/app/.step.txt")
 QUESTION_PATH = Path("/app/question.md")
 ANSWER_PATH = Path("/app/answer.json")
 TRAJECTORY_PATH = Path("/logs/agent/trajectory.json")
+PI_LOG_PATH = Path("/logs/agent/pi.txt")
 REWARD_PATH = Path("/logs/verifier/reward.json")
 FILE_RE = re.compile(r"/data/corpus/[^\s\"']+")
 
@@ -38,22 +39,50 @@ def cmd_write_reference() -> None:
     REFERENCE_PATH.chmod(0o600)
 
 
+def _agent_log() -> str:
+    if TRAJECTORY_PATH.is_file():
+        return TRAJECTORY_PATH.read_text()
+    if PI_LOG_PATH.is_file():
+        return PI_LOG_PATH.read_text(errors="replace")
+    return ""
+
+
+def _pi_tokens(text: str) -> int:
+    total = 0
+    for line in text.splitlines():
+        if '"message_end"' not in line:
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if event.get("type") != "message_end":
+            continue
+        usage = (event.get("message") or {}).get("usage") or {}
+        total += int(usage.get("totalTokens") or 0)
+    return total
+
+
 def _trajectory_metrics() -> tuple[int, int, int]:
-    if not TRAJECTORY_PATH.exists():
+    text = _agent_log()
+    if not text:
         return 0, 0, 0
-    text = TRAJECTORY_PATH.read_text()
     files_opened = len(set(FILE_RE.findall(text)))
-    data = json.loads(text)
-    final = data.get("final_metrics") or {}
-    tokens = int(final.get("total_prompt_tokens") or 0) + int(
-        final.get("total_completion_tokens") or 0
-    )
-    tool_calls = 0
-    for step in data.get("steps") or []:
-        tool_calls += len(step.get("tool_calls") or [])
-    if not tool_calls:
-        tool_calls = int(final.get("total_steps") or 0)
-    return tool_calls, tokens, files_opened
+    if TRAJECTORY_PATH.is_file():
+        data = json.loads(text)
+        final = data.get("final_metrics") or {}
+        tokens = int(final.get("total_prompt_tokens") or 0) + int(
+            final.get("total_completion_tokens") or 0
+        )
+        tool_calls = 0
+        for step in data.get("steps") or []:
+            tool_calls += len(step.get("tool_calls") or [])
+        if not tool_calls:
+            tool_calls = int(final.get("total_steps") or 0)
+        return tool_calls, tokens, files_opened
+    tool_calls = text.count('"type":"tool_execution_start"')
+    tool_calls += text.count('"type": "tool_execution_start"')
+    return tool_calls, _pi_tokens(text), files_opened
 
 
 def cmd_costs() -> None:
