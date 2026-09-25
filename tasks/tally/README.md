@@ -6,6 +6,10 @@ The agent bets a color on each card in one shuffled deck. Later bets should get 
 
 Verifiable. Each turn settles after the agent writes a bet. The next turn shows the revealed card in `/app/view.txt`. The agent cannot change the bet after that reveal.
 
+## Labels
+
+`drift`, `ordered`. Each run shuffles the deck. Later bets depend on the cards already seen.
+
 ## Environment
 
 - Image: `ubuntu:24.04` with `python3`

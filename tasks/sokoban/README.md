@@ -6,6 +6,10 @@ The agent solves several Sokoban puzzles on one fixed wall layout. Later puzzles
 
 Verifiable. A move into a wall fails at once. A blocked push fails at once. The agent can choose another move in the same puzzle.
 
+## Labels
+
+`fixed`, `ordered`. The wall layout stays the same on every run. Episode order is the curriculum.
+
 ## Environment
 
 Planned container:

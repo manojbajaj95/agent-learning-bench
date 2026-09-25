@@ -6,6 +6,10 @@ The agent writes 26 reports for one company. The house style guide is hidden. Th
 
 Verifiable. `report submit` accepts or rejects the draft during the step. The agent can edit and submit again before the step ends. The grader allows six submissions per job.
 
+## Labels
+
+`fixed`, `ordered`. The style guide and the job list stay the same on every run. Later jobs use what earlier reviews taught.
+
 ## Environment
 
 - Image: `ubuntu:24.04` with `python3` and sudo

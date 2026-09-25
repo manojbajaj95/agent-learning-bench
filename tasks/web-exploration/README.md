@@ -6,6 +6,10 @@ The agent completes 187 Shopping tasks on one pinned WebArena site. Success shou
 
 Non-verifiable. WebArena-Verified scores the response and the HAR after the step. That score does not return to the agent. The agent can browse the site during the step.
 
+## Labels
+
+`fixed`, `unordered`. The pinned Shopping site stays the same on every run. Each step resets the site, so task order does not change the world.
+
 ## Environment
 
 The site is the official WebArena Shopping service. It is not a mock inside the image.

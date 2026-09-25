@@ -6,6 +6,10 @@ The agent answers 48 questions about one frozen Flask repository. Quality should
 
 Non-verifiable. The judge scores the answer after the step. That score does not return to the agent. The agent can read the repository during the step.
 
+## Labels
+
+`fixed`, `unordered`. The repository stays the same on every run. A question does not depend on the questions before it.
+
 ## Environment
 
 - Dataset in `environment/data/`: `questions.json`, `gold.json`, and `repo/` (Flask at `85c5d93`)

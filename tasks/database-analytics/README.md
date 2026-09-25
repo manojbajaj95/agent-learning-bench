@@ -6,6 +6,10 @@ The agent answers 174 questions about one Formula 1 SQLite database. Accuracy sh
 
 Non-verifiable. The verifier compares `/app/answer.json` with the gold result after the step. That verdict does not return to the agent. The agent can run SQL and read the schema during the step.
 
+## Labels
+
+`fixed`, `unordered`. The database stays the same on every run. A question does not depend on the questions before it.
+
 ## Environment
 
 - Dataset in `environment/data/`: `formula_1.sqlite`, `questions.json`, and `gold.json`

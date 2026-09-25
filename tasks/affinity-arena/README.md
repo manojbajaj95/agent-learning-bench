@@ -6,6 +6,10 @@ The agent plays twenty 3-on-3 battles on one hidden affinity chart. Damage depen
 
 Verifiable. Each attack shows its damage during the battle. The agent can switch or attack again before the battle ends. The chart itself stays hidden.
 
+## Labels
+
+`fixed`, `ordered`. The chart and the battle list stay the same on every run. Holdout battles stay at the end.
+
 ## Environment
 
 - Checked-in instance: seed 1, chart generator v2, task version 0.2.1

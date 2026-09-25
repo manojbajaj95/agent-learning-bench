@@ -34,13 +34,15 @@ A final score cannot answer these questions. Each task must report a curve acros
 
 ## Task design
 
-One trial contains one fixed environment and many ordered Harbor steps. Each step is one job, fight, question, or episode. The environment and workspace persist across steps in a trial. A new trial starts a new container. Task authors should keep durable agent notes in `/app` and hidden engine state under `/opt`.
+One trial contains one fixed environment and many ordered Harbor steps. Each step is one job, fight, question, or episode. Hidden engine state stays under `/opt`. A new trial starts a new container.
+
+Baseline starts each step with no chat memory, no agent files, and no traces. In-context learning is the system that keeps the chat.
 
 ## Learning systems
 
 The bench compares systems on the same task, model, and step order. Harbor's built-in [pi](https://pi.dev/) agent is the baseline harness. Other systems add one thing on top of that same agent.
 
-The container filesystem persists in every system (for example `/app/view.txt`).
+Baseline does not carry agent files or traces into the next step. In-context learning keeps the earlier chat.
 
 **Recipes live in [`systems.toml`](systems.toml).** The CLI reads that file. List them with:
 
@@ -126,7 +128,7 @@ Each task also needs these controls:
 | Holdout tail | Copying corrected answers |
 | Cost curve | Brute-force exploration hidden by a correct final answer |
 | Fixed environment per trial | Changes in the world being mistaken for learning |
-| Fresh baseline condition | Session files or resumed chat being mistaken for no learning |
+| Fresh baseline condition | Memory, files, or traces being mistaken for no learning |
 
 Give the task one learning object and enough steps that a curve can show a trend. Include a holdout that tests transfer. Do not install the solution, reveal hidden state, or treat a final aggregate score as the only result.
 
@@ -134,29 +136,86 @@ Give the task one learning object and enough steps that a curve can show a trend
 
 All tasks are runnable except Sokoban, which is a design only.
 
-| Task | Domain | Learning object |
-|---|---|---|
-| [Tally](tasks/tally/) | Verifiable | Card counts across twelve turns |
-| [Poker](tasks/poker/) | Verifiable | A sticky heads-up opponent across 100 hands |
-| [Affinity Arena](tasks/affinity-arena/) | Verifiable | A hidden affinity chart across twenty battles |
-| [Report check](tasks/report-check/) | Verifiable | An unpublished house style guide, learned from review comments |
-| [Programming language](tasks/programming-language/) | Verifiable | One generated language, learned through interpreter feedback across twenty programming problems |
-| [Corpus](tasks/corpus/) | Non-verifiable | A frozen Confluence wiki map |
-| [Codebase Q&A](tasks/codebase-qa/) | Non-verifiable | Flask hierarchy and call patterns |
-| [Database analytics](tasks/database-analytics/) | Non-verifiable | Formula 1 schema and query patterns |
-| [Web exploration](tasks/web-exploration/) | Non-verifiable | WebArena-Verified Shopping structure and navigation across 187 tasks with `agent-browser` |
-| [Sokoban](tasks/sokoban/) | Verifiable | One fixed board across episodes (design only) |
+`fixed` means the environment is the same on every run. `drift` means the environment changes from run to run. `ordered` means step order matters. `unordered` means any step order is the same task.
+
+| Task | Domain | Labels | Learning object |
+|---|---|---|---|
+| [Tally](tasks/tally/) | Verifiable | drift, ordered | Card counts across twelve turns |
+| [Poker](tasks/poker/) | Verifiable | drift, ordered | A sticky heads-up opponent across 100 hands |
+| [Affinity Arena](tasks/affinity-arena/) | Verifiable | fixed, ordered | A hidden affinity chart across twenty battles |
+| [Report check](tasks/report-check/) | Verifiable | fixed, ordered | An unpublished house style guide, learned from review comments |
+| [Programming language](tasks/programming-language/) | Verifiable | fixed, ordered | One generated language, learned through interpreter feedback across twenty programming problems |
+| [Corpus](tasks/corpus/) | Non-verifiable | fixed, unordered | A frozen Confluence wiki map |
+| [Codebase Q&A](tasks/codebase-qa/) | Non-verifiable | fixed, unordered | Flask hierarchy and call patterns |
+| [Database analytics](tasks/database-analytics/) | Non-verifiable | fixed, unordered | Formula 1 schema and query patterns |
+| [Web exploration](tasks/web-exploration/) | Non-verifiable | fixed, unordered | WebArena-Verified Shopping structure and navigation across 187 tasks with `agent-browser` |
+| [Sokoban](tasks/sokoban/) | Verifiable | fixed, ordered | One fixed board across episodes (design only) |
+
+## Task checklist
+
+Use this list for every new task. A task is ready when every item is true.
+
+### README
+
+The README opens with all of these:
+
+- [ ] A short brief
+- [ ] Verifiable or non-verifiable
+- [ ] The environment
+- [ ] The step design
+- [ ] The learning goal
+- [ ] The reward and the cost metrics
+- [ ] Two labels: `fixed` or `drift`, and `ordered` or `unordered`
+
+### Labels
+
+- [ ] `fixed`: the environment is the same on every run
+- [ ] `drift`: the environment changes from run to run. Say what changes
+- [ ] `ordered`: step order matters. Later jobs must not be easier only because they come later
+- [ ] `unordered`: any step order is the same task
+
+### One learning object
+
+Score the learning, not only the finished job. Earlier jobs must reveal structure that later jobs can reuse.
+
+- [ ] Jobs share one world
+- [ ] Jobs are related, and they are not copies of one prompt
+- [ ] The task does not depend on another task
+- [ ] The horizon is long enough for a curve
+- [ ] A holdout tail uses the same world and new jobs
+- [ ] The task has room for quality to rise or cost to fall
+- [ ] A later check retests an earlier skill, or one small environment change tests repair
+
+### Baseline keeps nothing
+
+A baseline step starts with no chat memory, no agent files, and no traces. Check the words the agent reads, and check the environment.
+
+- [ ] The step instruction does not mention notes or sessions
+- [ ] The rules copied into `/app` do not mention notes or sessions
+- [ ] The environment does not leave notes, session logs, or traces for the next baseline step
+- [ ] In-context learning is the only official system that keeps the chat
+- [ ] Oracle only checks that a solution exists. It is not a learning curve
+
+### Score and cost
+
+- [ ] `reward.txt` is the learning score for that step
+- [ ] `reward.json` includes that score and a cost metric for the learning object
+- [ ] The cost metric can fall while quality stays high, such as files opened, actions, queries, or iterations
+- [ ] The first scored attempt fixes the reward
+- [ ] The solution and the hidden state stay out of the agent view
+
+### Run and report
+
+- [ ] `alb prepare` downloads once, then does nothing when the task is already present
+- [ ] A smoke slice does not rewrite the real task
+- [ ] Baseline and in-context learning use the same task, model, and step order
+- [ ] `alb report` takes one job and draws that job only
+- [ ] `alb upload` takes that same job
+- [ ] The report shows the curves for that job: outcome, cost, sample efficiency, holdout transfer, and repair when the task has drift
 
 ## Contributing a task
 
-Build tasks in [Harbor](https://www.harborframework.com/docs) format and submit them through this repository. A task proposal should state:
-
-- whether it is verifiable or non-verifiable;
-- the stable object that the agent must learn;
-- the expected learning curve;
-- the per-step reward and cost metric;
-- the baseline, sessions, and in-context entries in [`systems.toml`](systems.toml); and
-- the holdout or other control that rules out shortcuts.
+Build the task in [Harbor](https://www.harborframework.com/docs) format. Follow the task checklist above before you submit it.
 
 ## References
 

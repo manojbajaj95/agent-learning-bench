@@ -6,6 +6,10 @@ The agent answers 64 questions about one frozen company wiki. Accuracy should st
 
 Non-verifiable. An LLM judge scores the answer after the step. That score does not return to the agent. The agent can read the wiki during the step.
 
+## Labels
+
+`fixed`, `unordered`. The wiki stays the same on every run. A question does not depend on the questions before it.
+
 ## Environment
 
 - Dump in `data/`: `questions.jsonl` and two Confluence zip files (about 5,189 pages)

@@ -6,6 +6,10 @@ The agent solves twenty programming problems in one generated language. The toke
 
 Verifiable. `language-lab compile` and `language-lab run` return syntax errors, runtime errors, and integer output during the step. Hidden tests return only a pass count. The agent can edit the program before the step ends. Each problem allows 64 local calls and six hidden submissions.
 
+## Labels
+
+`fixed`, `ordered`. One pinned language stays the same on every run. Problem order is the curriculum.
+
 ## Environment
 
 - Checked-in instance: seed 1, generator version 3, task version 0.3.0, `hidden` information

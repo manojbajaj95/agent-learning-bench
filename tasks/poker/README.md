@@ -6,6 +6,10 @@ The agent plays heads-up no-limit Texas Hold'em against one sticky opponent. The
 
 Verifiable. During a hand the agent sees the opponent's actions and can change its next action before the hand ends.
 
+## Labels
+
+`drift`, `ordered`. Each run deals new cards. Stacks and the button depend on hand order.
+
 ## Environment
 
 - Image: `ubuntu:24.04` with `python3`
