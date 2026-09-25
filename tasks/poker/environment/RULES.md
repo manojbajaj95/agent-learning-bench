@@ -1,8 +1,8 @@
 # Heads-up no-limit Texas Hold'em
 
 You play one opponent. Blinds are **5** (small) and **10** (big). You both start
-with **1000** chips. Stacks persist from hand to hand. The score is your chip
-total at the end of the match.
+with **1000** chips. Stacks persist from hand to hand. The score is earnings:
+your chips minus 1000.
 
 Each Harbor step is one hand. The button rotates after every hand. In
 heads-up, the button posts the small blind and acts first before the flop.

@@ -1,7 +1,6 @@
 # Poker
 
-Read `/app/world/RULES.md` and `/app/view.txt`. Past session logs are under
-`/app/sessions/` when available.
+Read `/app/world/RULES.md` and `/app/view.txt`.
 
 Play this hand with:
 

@@ -28,7 +28,4 @@ The Required output block states the value. Follow it exactly.
 
 The verifier strips whitespace and compares.
 
-Keep notes in `/app/notes.md` if useful.
-Past session logs are under `/app/sessions/`.
-
 Stop after writing `/app/answer.json`.

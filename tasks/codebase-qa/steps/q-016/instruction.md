@@ -9,7 +9,6 @@ Read `/app/question.md`. Find the answer in the repository. Write it to `/app/an
 { "answer": "..." }
 ```
 
-Ground the answer in files and symbols you found. Keep notes in `/app/notes.md` if useful.
-Past session logs are under `/app/sessions/`.
+Ground the answer in files and symbols you found.
 
 Stop after writing `/app/answer.json`.

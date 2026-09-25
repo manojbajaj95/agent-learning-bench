@@ -35,16 +35,16 @@ There is no holdout roster. Later hands are the transfer check: the same opponen
 
 ## Learning goal
 
-The learning object is the opponent's fixed leak: extra weight on call, and a penalty on check. Chip stack should rise as the agent stops paying off that pattern. Baseline starts a fresh chat each hand. In-context learning resumes the same chat. Files in `/app` persist in both conditions.
+The learning object is the opponent's fixed leak: extra weight on call, and a penalty on check. Earnings should rise as the agent stops paying off that pattern. Baseline starts a fresh chat each hand. In-context learning resumes the same chat. Files in `/app` persist in both conditions.
 
 ## Reward and cost
 
-The trial score is the agent's chip total after the last hand (`multi_step_reward_strategy = "final"`). Each hand also writes `/logs/verifier/reward.txt` with that chip count, and `/logs/verifier/reward.json` with:
+The score is earnings: agent chips minus the 1000 starting stack. The trial score is earnings after the last hand (`multi_step_reward_strategy = "final"`). Each hand writes that number to `/logs/verifier/reward.txt` and `/logs/verifier/reward.json`:
 
 | Field | Meaning |
 |---|---|
+| `reward`, `earnings` | Chips won or lost since the start |
 | `chips` | Agent stack after the hand |
-| `profit` | `chips` minus 1000 |
 | `hands_done` | Hands finished |
 | `completed` | 1 when the hand settled |
 

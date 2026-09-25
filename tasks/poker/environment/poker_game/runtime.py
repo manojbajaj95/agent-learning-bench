@@ -211,16 +211,17 @@ class Runtime:
             int(actions_path.read_text().strip() or "0") if actions_path.exists() else 0
         )
         actions_path.write_text("0\n")
+        earnings = chips - START_STACK
         record = {
-            "reward": chips,
+            "reward": earnings,
+            "earnings": earnings,
             "chips": chips,
-            "profit": chips - START_STACK,
             "hands_done": min(index, match.hand_index),
             "completed": 1,
             "env_actions": env_actions,
         }
         self.verifier.mkdir(parents=True, exist_ok=True)
-        atomic_write(self.verifier / "reward.txt", f"{chips}\n", 0o644)
+        atomic_write(self.verifier / "reward.txt", f"{earnings}\n", 0o644)
         atomic_write(self.verifier / "reward.json", json.dumps(record) + "\n", 0o644)
         return record
 

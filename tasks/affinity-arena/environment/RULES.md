@@ -41,8 +41,8 @@ affinity-arena switch <creature>
 attack or switch advances one tick. The returned view and `/app/view.txt`
 show the same observations. Public battle logs are in `/app/battles/`.
 
-Write notes in `/app/notes.md` and observed multipliers in
-`/app/affinity-chart.json`, with attack affinities as outer keys and defender
-affinities as inner keys, for example `{"Amber": {"Basalt": 2}}`. Omit unknown
-cells. These files persist; the chart file is diagnostic and does not affect
-reward. Write helper scripts and other files in `/app/workspace/`.
+Record observed multipliers in `/app/affinity-chart.json`, with attack
+affinities as outer keys and defender affinities as inner keys, for example
+`{"Amber": {"Basalt": 2}}`. Omit unknown cells. The chart is diagnostic and
+does not affect reward. Write helper scripts and other files in
+`/app/workspace/`.

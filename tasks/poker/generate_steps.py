@@ -47,7 +47,7 @@ artifacts = ["/app/view.txt", "/app/sessions"]
 [task]
 name = "agent-learning-bench/poker"
 version = "0.1.0"
-description = "Heads-up Hold'em against a sticky opponent. Score is chips at the end."
+description = "Heads-up Hold'em against a sticky opponent. Score is earnings at the end."
 keywords = ["poker", "multi-step", "learning", "games"]
 
 [metadata]

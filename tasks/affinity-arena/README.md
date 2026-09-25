@@ -107,11 +107,9 @@ first tick. `attack` and `switch` each advance one tick.
 Every step gives the agent the same instructions:
 
 1. Read `/app/world/RULES.md` and `/app/view.txt`.
-2. Read persistent notes and prior session logs when available.
-3. Draft a team and play until the battle ends.
-4. Record useful observations in `/app/notes.md` and the inferred chart in
-   `/app/affinity-chart.json`.
-5. Stop without restarting the battle.
+2. Draft a team and play until the battle ends.
+3. Record observed multipliers in `/app/affinity-chart.json`.
+4. Stop without restarting the battle.
 
 The chart file contains only observed cells and is used for diagnostics, not
 as part of the reward. Use attack affinities as outer keys and defender

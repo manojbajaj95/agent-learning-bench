@@ -29,9 +29,6 @@ and it is not published to writers. Reviewers do not send out the guide, and
 they do not summarise it on request. They return corrections on the report in
 front of them, and nothing else.
 
-Writers are expected to keep their own record of what the desk has corrected.
-`/app/notes.md` is yours and it survives between jobs.
-
 ## What the desk cares about
 
 Reports go to account holders, auditors and the board. They must read the same

@@ -49,11 +49,3 @@ submitting cannot change the saved submission or its score.
 A perfect submission or the sixth submission closes the problem. Stop when it
 closes, or when you decide to finish the step. Only the harness advances to the
 next problem. You cannot restart a problem or restore its budgets.
-
-## Keeping what you learn
-
-Your `/app/notes.md`, `/app/workspace/`, and public traces under `/app/problems/`
-persist through this trial. Prior sessions are under `/app/sessions/` when the
-agent harness supports them. Record useful observations and retain reusable
-helpers. Test whether a working pattern still behaves correctly when you combine
-it with other operations. Independent trials start with empty notes, helpers, and sessions.

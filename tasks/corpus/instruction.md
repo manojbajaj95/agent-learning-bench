@@ -9,7 +9,6 @@ Read `/app/question.md`. Find the answer in the wiki. Write it to `/app/answer.j
 { "answer": "..." }
 ```
 
-Ground the answer in pages you found. Keep notes in `/app/notes.md` if useful.
-Past session logs are under `/app/sessions/`.
+Ground the answer in pages you found.
 
 Stop after writing `/app/answer.json`.
