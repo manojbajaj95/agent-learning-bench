@@ -6,43 +6,36 @@
 
 ## Why build this benchmark?
 
-AI systems can score well on hard evaluations and still fail at simple, repeated work. They fix one bug and restore an earlier bug. They solve a familiar problem after a lot of training, then struggle to pick up a nearby skill from a few examples.
+Most agent benchmarks score a finished job. This bench scores whether earlier jobs change later ones. The write-up is [Score the learning, not the job](https://mbajaj.me/blog/agent-learning-bench-score-the-learning-not-the-job).
 
-This benchmark asks:
+The question is:
 
-> Can an agent learn a stable environment and become more accurate, faster, or more efficient over repeated jobs?
+> Can an agent learn a stable environment and become more accurate, faster, or cheaper over repeated jobs?
 
-ARC-AGI-3 is the closest active benchmark for that question, but it cannot cover every form of learning. Agent Learning Bench adds longer and more varied environments. It also tries to reduce three common problems:
+The bench does not pick a learning mechanism. A system may change weights, a harness, stored experience, a world model, or code. The curves stay comparable.
 
-1. Short tasks can reward a simple append-only log instead of a reusable model of the environment.
-2. Similar environments do not show whether a learning method works across domains.
-3. Once researchers train against a fixed benchmark, high scores can reflect benchmark-specific tuning.
+Report these curves for each job:
 
-The measurement is learning efficiency.
+- Outcome: does reward rise?
+- Learning efficiency: does a successful job cost less?
+- Sample efficiency: how many jobs until performance is useful?
+- Retention: do new jobs erase an older skill?
+- Holdout transfer: does the tail stay strong on unseen jobs?
+- Repair: after a small environment change, does the system recover?
 
-## What we need to test
-
-A learning agent should improve on these axes:
-
-- Sample efficiency: how much experience it needs before performance improves
-- Continual learning: whether knowledge from earlier jobs helps on later jobs
-- Generalization: whether it applies learned structure to items that did not receive feedback
-- Robustness: whether it keeps useful knowledge when the job changes within the same environment
-- Exploration cost: whether it can keep quality while using fewer actions, probes, file reads, or tokens
-
-A final score cannot answer these questions. Each task must report a curve across steps. Depending on the task, first-attempt accuracy should rise, exploration cost should fall, or actions to completion should move toward the optimum.
+A final score cannot answer these questions. Each task reports a curve across steps.
 
 ## Task design
 
-One trial contains one fixed environment and many ordered Harbor steps. Each step is one job, fight, question, or episode. Hidden engine state stays under `/opt`. A new trial starts a new container.
+One trial contains one environment and many Harbor steps. Each step is one job, fight, question, or episode. Hidden engine state stays under `/opt`. A new trial starts a new container. Label the task `fixed` or `drift`, and `ordered` or `unordered`. The definitions are in the [task checklist](CONTRIBUTING.md#task-checklist).
 
 Baseline starts each step with no chat memory, no agent files, and no traces. In-context learning is the system that keeps the chat.
 
 ## Learning systems
 
-The bench compares systems on the same task, model, and step order. Harbor's built-in [pi](https://pi.dev/) agent is the baseline harness. Other systems add one thing on top of that same agent.
+The official comparison is baseline and in-context learning, on the same task, model, and step order. Harbor's built-in [pi](https://pi.dev/) agent is the harness.
 
-Baseline does not carry agent files or traces into the next step. In-context learning keeps the earlier chat.
+Baseline does not carry agent files or traces into the next step. In-context learning keeps the earlier chat. `systems.toml` also has a sessions recipe and an oracle. Those are not learning curves. To add a system, follow [Contributing a learning system](CONTRIBUTING.md#contributing-a-learning-system).
 
 **Recipes live in [`systems.toml`](systems.toml).** The CLI reads that file. List them with:
 
@@ -54,12 +47,8 @@ alb run tally --system baseline
 alb run tally --system icl
 ```
 
-- **baseline** — Harbor `pi`. Fresh chat each step.
-- **sessions** — same `pi`, plus [pi-sessions](agents/pi_sessions/) copies each session JSONL to `/app/sessions/`.
+- **baseline** — Harbor `pi`. Fresh chat each step. No agent files and no traces.
 - **icl** — same `pi`, with `--resume-trajectory` so earlier turns stay in context.
-- **oracle** — Harbor oracle. Writes the hidden solution. No model.
-
-To add a system, add a `[systems.<name>]` table in `systems.toml`.
 
 ## CLI
 
@@ -127,7 +116,7 @@ Each task also needs these controls:
 | First-attempt scoring | Repeated grading until the answer passes |
 | Holdout tail | Copying corrected answers |
 | Cost curve | Brute-force exploration hidden by a correct final answer |
-| Fixed environment per trial | Changes in the world being mistaken for learning |
+| `fixed` or `drift` label | A world change being mistaken for learning |
 | Fresh baseline condition | Memory, files, or traces being mistaken for no learning |
 
 Give the task one learning object and enough steps that a curve can show a trend. Include a holdout that tests transfer. Do not install the solution, reveal hidden state, or treat a final aggregate score as the only result.
@@ -151,73 +140,12 @@ All tasks are runnable except Sokoban, which is a design only.
 | [Web exploration](tasks/web-exploration/) | Non-verifiable | fixed, unordered | WebArena-Verified Shopping structure and navigation across 187 tasks with `agent-browser` |
 | [Sokoban](tasks/sokoban/) | Verifiable | fixed, ordered | One fixed board across episodes (design only) |
 
-## Task checklist
+## Contributing
 
-Use this list for every new task. A task is ready when every item is true.
-
-### README
-
-The README opens with all of these:
-
-- [ ] A short brief
-- [ ] Verifiable or non-verifiable
-- [ ] The environment
-- [ ] The step design
-- [ ] The learning goal
-- [ ] The reward and the cost metrics
-- [ ] Two labels: `fixed` or `drift`, and `ordered` or `unordered`
-
-### Labels
-
-- [ ] `fixed`: the environment is the same on every run
-- [ ] `drift`: the environment changes from run to run. Say what changes
-- [ ] `ordered`: step order matters. Later jobs must not be easier only because they come later
-- [ ] `unordered`: any step order is the same task
-
-### One learning object
-
-Score the learning, not only the finished job. Earlier jobs must reveal structure that later jobs can reuse.
-
-- [ ] Jobs share one world
-- [ ] Jobs are related, and they are not copies of one prompt
-- [ ] The task does not depend on another task
-- [ ] The horizon is long enough for a curve
-- [ ] A holdout tail uses the same world and new jobs
-- [ ] The task has room for quality to rise or cost to fall
-- [ ] A later check retests an earlier skill, or one small environment change tests repair
-
-### Baseline keeps nothing
-
-A baseline step starts with no chat memory, no agent files, and no traces. Check the words the agent reads, and check the environment.
-
-- [ ] The step instruction does not mention notes or sessions
-- [ ] The rules copied into `/app` do not mention notes or sessions
-- [ ] The environment does not leave notes, session logs, or traces for the next baseline step
-- [ ] In-context learning is the only official system that keeps the chat
-- [ ] Oracle only checks that a solution exists. It is not a learning curve
-
-### Score and cost
-
-- [ ] `reward.txt` is the learning score for that step
-- [ ] `reward.json` includes that score and a cost metric for the learning object
-- [ ] The cost metric can fall while quality stays high, such as files opened, actions, queries, or iterations
-- [ ] The first scored attempt fixes the reward
-- [ ] The solution and the hidden state stay out of the agent view
-
-### Run and report
-
-- [ ] `alb prepare` downloads once, then does nothing when the task is already present
-- [ ] A smoke slice does not rewrite the real task
-- [ ] Baseline and in-context learning use the same task, model, and step order
-- [ ] `alb report` takes one job and draws that job only
-- [ ] `alb upload` takes that same job
-- [ ] The report shows the curves for that job: outcome, cost, sample efficiency, holdout transfer, and repair when the task has drift
-
-## Contributing a task
-
-Build the task in [Harbor](https://www.harborframework.com/docs) format. Follow the task checklist above before you submit it.
+Build a task in [Harbor](https://www.harborframework.com/docs) format. The task checklist is in [CONTRIBUTING.md](CONTRIBUTING.md#task-checklist). A new learning system is a table in [`systems.toml`](systems.toml). The rules are in [Contributing a learning system](CONTRIBUTING.md#contributing-a-learning-system).
 
 ## References
 
+- [Score the learning, not the job](https://mbajaj.me/blog/agent-learning-bench-score-the-learning-not-the-job)
 - [ARC Prize](https://arcprize.org/)
 - [Harbor documentation](https://www.harborframework.com/docs)
