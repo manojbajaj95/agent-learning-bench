@@ -1,92 +1,59 @@
 # Courier / Picker
 
-Courier / Picker is a proposed Harbor multi-step task for spatial map learning.
-It is a Domain 1 task: movement gives immediate and verifiable feedback.
-This directory contains the design only. It is not yet a runnable Harbor task.
+The agent learns one fixed map by walking it. Later jobs should use shorter routes. This directory is a design only. It is not a Harbor task yet. `alb prepare courier-picker` rejects it.
 
-## Goal
+## Task type
 
-The environment contains one fixed 64 by 64 grid. Walls do not change during a
-trial. The agent can see only its coordinates and walls next to its current
-cell. It must build a map from repeated jobs and use that map to take shorter
-routes.
+Verifiable. A move into a wall fails at once. The agent sees the new cell and the walls next to it, and can choose another move in the same job.
 
-The simulator supports two job types:
+## Environment
 
-- **Courier:** travel from a changing start cell to a changing goal cell.
-- **Picker:** leave the dock, collect an item at a changing reachable cell, and
-  return to the dock.
+Planned container:
 
-One Harbor step is one job. The map persists across all steps.
+- One fixed 64 by 64 grid for the whole trial
+- The agent sees its coordinates and the walls next to the current cell
+- True map, job bank, and shortest paths live under `/opt`
+- Notes and the learned map live under `/app`
+- A blocked move spends an action and does not change the cell
 
-## Agent interface
+## Step design
 
-The simulator provides movement actions and a local sensor result. Each action
-returns the new coordinates and adjacent wall observations. Attempts to move
-through a wall consume an action but do not change the position.
+One step is one job. The map persists across jobs. Two job types are planned:
 
-The true map and optimal path data stay outside the agent workspace. The agent
-can keep its learned map and route notes under `/app`.
+- Courier: go from a new start cell to a new goal cell.
+- Picker: leave the dock, collect an item, and return to the dock.
 
-## Courier scoring
+Build one job type and one map first. Add the second job type after that curve is clear.
 
-Courier uses a fixed action budget. Its reward is:
+The holdout is the last part of the job list. Those starts, goals, or item cells sit in a district the earlier jobs did not visit. A route memorizer should fail that tail. An agent that learned the map should transfer.
+
+Use one map and one job order for every compared run. A new map is a new benchmark instance.
+
+## Learning goal
+
+The learning object is the wall map. Success should stay high while actions move down toward the shortest path. Baseline starts a fresh chat each job. In-context learning resumes the same chat. Files in `/app` persist in both conditions.
+
+## Reward and cost
+
+Courier reward, clamped to the Harbor range:
 
 ```text
 1 - (path length - optimal path length) / budget
 ```
 
-A timeout receives zero reward. Clamp the computed reward to the supported
-Harbor reward range.
+A timeout scores 0.
 
-## Picker scoring
+Picker still needs one normalized reward from success, action count, and the optimal route. Always report the raw action count with that reward.
 
-The Picker starts at the dock. The item appears at a random reachable cell. A
-successful job collects the item and returns to the dock within the budget.
-The main cost is the action count. The expected optimum is approximately twice
-the shortest dock-to-item distance.
-
-Before implementation, define one normalized Picker reward from success,
-action count, and the optimal route. Always report the raw action count with
-the reward.
-
-## Measurements
-
-Record these values for each job:
+Each job should record:
 
 ```text
 turn, job_type, reward, env_actions, tokens, wall_sec, optimal_actions, success
 ```
 
-The headline curve is actions to completion moving down toward the optimum.
-Success must stay stable or improve while route length falls.
+`tokens` and `wall_sec` come from the Harbor job. An unscored map check can report wall-map intersection over union. That check shows whether a shorter route came from a reusable map.
 
-As an unscored diagnostic, compare the agent map with the true map and report
-wall-map intersection over union. This shows whether route improvement comes
-from a reusable map.
-
-## Holdout
-
-Reserve the last part of the job sequence for starts, goals, or item locations
-in a district that earlier jobs did not visit. A route memorizer should fail
-this tail. An agent that learned the map conventions and connected routes
-should transfer better.
-
-Use a fixed map and fixed job sequence when comparing agents. Generate a new
-map only for a separate benchmark instance.
-
-## Evaluation conditions
-
-Run the same map and job sequence in two conditions:
-
-| Condition | Conversation | Files | Purpose |
-|---|---|---|---|
-| Baseline | Fresh at each step | Persist | Tests file-based map memory only |
-| Main | Resume across steps | Persist | Tests in-context learning plus files |
-
-The map, jobs, action budgets, and timeouts must match across both conditions.
-
-## Planned Harbor layout
+## Planned layout
 
 ```text
 tasks/courier-picker/
@@ -94,20 +61,6 @@ tasks/courier-picker/
 ├── task.toml
 ├── environment/
 │   ├── Dockerfile
-│   └── courier_picker/         # Grid generator, simulator, and path oracle
-└── steps/
-    └── job-001 … job-N/
-        ├── instruction.md      # Current job and stable action contract
-        ├── workdir/setup.sh    # Reset position and publish the job
-        └── tests/test.sh       # Settle job and write reward plus metrics
+│   └── courier_picker/
+└── steps/job-001 … job-N/
 ```
-
-Keep the true map, job bank, and shortest-path oracle under `/opt`. Keep only
-local observations, agent notes, and submitted routes under `/app`.
-
-## Extension path
-
-Start with one job type and one fixed map. Add the second job type only after
-the first version gives a clear efficiency curve. Do not add moving walls or
-new sensor types until the benchmark can separate map learning from route
-memorization.

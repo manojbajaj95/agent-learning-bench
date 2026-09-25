@@ -1,15 +1,46 @@
 # Affinity Arena
 
-Affinity Arena is a runnable, verifiable Harbor multi-step task. The checked-in
-instance uses seed 1 and chart generator v2 (task version 0.2.1).
-See [VALIDATION.md](VALIDATION.md) for measured results
-and manual acceptance checks.
+The agent plays twenty 3-on-3 battles on one hidden affinity chart. Damage depends on that chart. Later battles should be won with less regret as the agent fills the chart in.
 
-The agent plays a sequence of deterministic 3-on-3 creature battles. Every
-creature and move has one of six affinities, and attack damage depends on a
-hidden affinity chart. The agent must infer that chart from observed damage,
-retain what it learns across battles, and use it to draft teams and choose
-actions.
+## Task type
+
+Verifiable. Each attack shows its damage during the battle. The agent can switch or attack again before the battle ends. The chart itself stays hidden.
+
+## Environment
+
+- Checked-in instance: seed 1, chart generator v2, task version 0.2.1
+- Image: Ubuntu with `python3` and sudo. The agent is an unprivileged user.
+- Network: `public`
+- Hidden chart, schedule, and oracle: root-only directory
+- Public view: `/app/world/RULES.md` and `/app/view.txt`
+- Agent notes: `/app/notes.md` and `/app/affinity-chart.json`
+- Commands: `affinity-arena status`, `draft`, `attack`, `switch`
+
+Files in `/app` persist across the twenty battles. A new trial starts a new container. See [VALIDATION.md](VALIDATION.md) for checks.
+
+## Step design
+
+One trial is 20 battles. One step is one battle. The agent drafts three creatures from five, then plays until a win, a loss, or 30 ticks. Battles 1–15 use the main roster. Battles 16–20 are the holdout: new creature names and movesets, same chart. Only the first attempt counts.
+
+## Learning goal
+
+The learning object is the fixed 6 by 6 affinity chart. Reward, win rate, and belief accuracy should rise. Regret and extra ticks should fall, including on the holdout. Baseline starts a fresh chat each battle. In-context learning resumes the same chat. Files persist in both conditions.
+
+## Reward and cost
+
+Harbor averages `reward` over the twenty battles. For a finished battle:
+
+```text
+reward = clamp(0.5 + 0.5 x (agent HP remaining / 300 - opponent HP remaining / 420), 0, 1)
+```
+
+An unfinished battle scores 0. The verifier writes `/logs/verifier/reward.json` with `reward` plus `won`, `completed`, `ticks`, `oracle_ticks`, `opt_rate`, `regret`, `draft_ok`, `cells_seen`, `belief_acc`, `belief_cov`, and `env_actions`.
+
+Harbor also records `cost_usd`, input tokens, output tokens, and step duration. The learning curve uses `reward`, `regret`, `ticks`, and `env_actions` together.
+
+## Details
+
+The sections below keep the battle rules, the metric definitions, and the validation commands.
 
 ## Learning objective
 

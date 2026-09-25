@@ -1,32 +1,52 @@
 # Codebase Q&A
 
-Evaluate how an agent answers questions about one frozen Python repository (SWE-QA Flask, 48 questions). Gold for q-030 is patched in this repo: `accessed` does not gate cookie `dumps`.
+The agent answers 48 questions about one frozen Flask repository. Quality should stay high while the agent opens fewer files on later questions.
 
-The dataset is in `environment/data/`: `questions.json`, `gold.json`, and `repo/` (Flask at `85c5d93`). Harbor steps and `task.toml` are in git. `alb smoke` keeps the first 10 steps.
+## Task type
 
-Each step is scored by an LLM judge (`openai/gpt-5.6-luna`). The judge sees the question, the agent answer, and a hidden gold answer. Paraphrase can still score high. Token overlap is not used.
+Non-verifiable. The judge scores the answer after the step. That score does not return to the agent. The agent can read the repository during the step.
 
-Needs `OPENAI_API_KEY`. Use the OpenAI id `gpt-5.6-luna` (dot, not hyphen).
+## Environment
 
-Oracle writes the gold text, so a passing oracle run shows the judge is wired. A real agent is scored the same way. Judge traces are in `reward-details.json` after a job.
+- Dataset in `environment/data/`: `questions.json`, `gold.json`, and `repo/` (Flask at `85c5d93`)
+- Gold for q-030 is patched here: `accessed` does not gate cookie `dumps`
+- Network: `public`
+- Agent timeout: 180 seconds per question
+- Verifier timeout: 180 seconds. The judge needs `OPENAI_API_KEY`.
+- Harbor steps and `task.toml` are in git
 
-## Baseline
+The repository does not change between questions. Notes in `/app` persist across the trial. A new trial starts a new container.
 
-Harbor `pi`. Fresh chat each question.
+## Step design
+
+One trial is 48 questions, `q-001` through `q-048`. One step is one question. The agent writes the answer for that question. `alb smoke` keeps the first 10 steps.
+
+The judge is `openai/gpt-5.6-luna`. It sees the question, the agent answer, and a hidden gold answer. A paraphrase can still score high. Token overlap is not the score.
+
+This task has no holdout tail yet. Oracle writes the gold text. A passing oracle run shows that the judge is wired. Judge traces are in `reward-details.json`.
+
+## Learning goal
+
+The learning object is the Flask layout and its call patterns. Accuracy should stay high while tool calls and tokens fall. Baseline starts a fresh chat each question. In-context learning resumes the same chat. Compare the two on the same question order.
+
+## Reward and cost
+
+Harbor averages the per-question reward (`multi_step_reward_strategy = "mean"`). The verifier writes `/logs/verifier/reward.json`:
+
+| Field | Meaning |
+|---|---|
+| `reward` | Judge score for the answer |
+| `correctness` | Same judge score |
+| `tool_calls` | Tool calls in the step trajectory |
+| `tokens` | Prompt tokens plus completion tokens in that trajectory |
+
+Harbor also records `cost_usd`, input tokens, output tokens, and step duration. File opens are not a separate field yet.
+
+## Running
+
+Needs `OPENAI_API_KEY`. The model id is `openai/gpt-5.6-luna`.
 
 ```bash
-harbor run -p tasks/codebase-qa -a pi -m openai/gpt-5.6-luna \
-  --agent-timeout-multiplier 5 \
-  --job-name flask-baseline
-```
-
-## In-context learning
-
-Same `pi`, with `--resume-trajectory`. Prior questions stay in the model context.
-
-```bash
-harbor run -p tasks/codebase-qa -a pi -m openai/gpt-5.6-luna \
-  --agent-timeout-multiplier 5 \
-  --resume-trajectory \
-  --job-name flask-icl
+alb run codebase-qa --system baseline
+alb run codebase-qa --system icl
 ```

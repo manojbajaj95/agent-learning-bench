@@ -1,20 +1,59 @@
 # Report check
 
-Harbor multi-step task: twenty-six report-writing jobs for one company whose
-house style guide is never published.
+The agent writes 26 reports for one company. The house style guide is hidden. The agent learns it from review comments. Later reports should be accepted on the first submission.
 
-Each step is a different report. The rules that decide whether a report is
-accepted are fixed, machine-checkable and hidden in `/opt/report`. The agent
-learns them only from the corrections the reviewer returns on a rejected
-report. Nothing in the environment lists the rule set.
+## Task type
 
-The learning object is **the house style guide**. The measurement is
-**submissions needed before a report is accepted**, which should fall toward one
-while acceptance stays high.
+Verifiable. `report submit` accepts or rejects the draft during the step. The agent can edit and submit again before the step ends. The grader allows six submissions per job.
 
-See [`instruction.md`](instruction.md) for the fixed per-step instructions. They are
-the same text on all twenty-six steps: the instruction does not say which job it is,
-how hard it is, or which rules apply.
+## Environment
+
+- Image: `ubuntu:24.04` with `python3` and sudo
+- Agent user: `agent`
+- Hidden rules, briefs, and state: `/opt/report` (root, mode 700)
+- Public file: `/app/world/RULES.md` (it does not list the rules)
+- Persistent files: `/app/notes.md`, `/app/desk/ledger.jsonl`
+- Commands: `report submit`, `report status`
+- Network: `public`
+- No dataset download. Briefs are in [`environment/report/briefs.json`](environment/report/briefs.json).
+
+The same instruction text is used on every step. It does not name the job or the active rules. See [`instruction.md`](instruction.md).
+
+## Step design
+
+One trial is 26 jobs, `job-01` through `job-26`. One step is one report. Setup publishes `/app/brief.md` and removes `/app/report.md`. Notes stay.
+
+Rules turn on by tier and stay on:
+
+| Tier | Jobs | What is added |
+|---|---|---|
+| 1 | job-01 … job-06 | Title, sections, terminology, summary length, sign-off |
+| 2 | job-07 … job-13 | Metadata, money, dates, findings, risk |
+| 3 | job-14 … job-26 | No hedging, appendix table, word limit |
+
+`job-23` … `job-26` are the holdout. They use two new report types. Every rule on them was taught earlier.
+
+## Learning goal
+
+The learning object is the hidden style guide, including the term list and the hedge list. Acceptance should stay high while submissions per job fall toward 1. First-submission violations should fall too. Baseline starts a fresh chat each job. In-context learning resumes the same chat.
+
+## Reward and cost
+
+Reward depends on which submission was accepted:
+
+| Accepted on | 1 | 2 | 3 | 4 | 5 | 6 | never |
+|---|---|---|---|---|---|---|---|
+| Reward | 1.0 | 0.85 | 0.7 | 0.55 | 0.4 | 0.4 | 0.0 |
+
+A report that is accepted and then edited before settle scores 0. Harbor averages the job rewards.
+
+Each job appends one row to `/app/desk/ledger.jsonl` with `reward`, `iterations`, `rule_violations`, `first_violations`, and `passed`. `rule_violations` counts rules broken on the first submission.
+
+Harbor records `cost_usd`, input tokens, output tokens, and step duration. The learning curve is `iterations` and `rule_violations` falling while `reward` stays high.
+
+## Details
+
+The sections below keep the review loop, the controls, and the run commands.
 
 ## Feedback domain
 
@@ -140,7 +179,7 @@ anyway. And an agent that leaves a background process running past the end of
 its turn could open the next job early, which strands its own step at reward 0
 and gains it nothing.
 
-## Environment
+## Environment details
 
 - Base image: `ubuntu:24.04` + `python3` + `sudo`
 - Agent runs as `agent`; the engine, rules and brief bank live in `/opt/report`,

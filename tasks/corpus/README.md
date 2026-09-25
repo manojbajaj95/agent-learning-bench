@@ -1,65 +1,63 @@
 # Corpus
 
-Evaluate how an agent answers questions about one frozen company wiki
-(EnterpriseRAG-Bench Confluence, 64 confluence-only questions).
+The agent answers 64 questions about one frozen company wiki. Accuracy should stay high while the agent opens fewer wiki files.
 
-The dump is in `data/`: `questions.jsonl` and two Confluence zip files
-(~5,189 pages). Patch gold in `questions.jsonl` (`gold_answer`). Patch wiki
-pages in the zip files. Then generate Harbor steps.
+## Task type
 
-Harbor cannot run a slice of one task: `--n` sets how many steps
-`generate_steps.py` writes. The wiki stays the full Confluence slice either way.
+Non-verifiable. An LLM judge scores the answer after the step. That score does not return to the agent. The agent can read the wiki during the step.
 
-Needs `OPENAI_API_KEY`. Use the OpenAI id `gpt-5.6-luna` (dot, not hyphen).
+## Environment
 
-## Generate steps
+- Dump in `data/`: `questions.jsonl` and two Confluence zip files (about 5,189 pages)
+- Source: EnterpriseRAG-Bench, confluence-only questions
+- Network: `public`
+- Agent timeout: 180 seconds per question
+- Verifier timeout: 180 seconds. The judge needs `OPENAI_API_KEY`.
+- Wiki path in the container: `/data/corpus`
 
-From the repo root:
+`steps/` and `task.toml` are generated. They are gitignored. Patch gold in `questions.jsonl` (`gold_answer`). Patch wiki pages in the zip files. Then generate steps. A new trial starts a new container. Notes in `/app` persist across questions in one trial.
+
+## Step design
+
+One trial is 64 questions. One step is one question. Generate them from the repo root:
 
 ```bash
-python3 tasks/corpus/generate_steps.py --n 10   # smoke
-python3 tasks/corpus/generate_steps.py --all    # all 64 confluence-only questions
+python3 tasks/corpus/generate_steps.py --n 10   # first 10 questions
+python3 tasks/corpus/generate_steps.py --all    # all 64
 ```
 
-This copies the dump into `environment/data/` for Docker. `steps/` and
-`task.toml` are generated. They are gitignored.
+Generation copies the dump into `environment/data/` for Docker. The wiki stays the full dump in both cases.
 
-To replace the upstream dump:
+Questions 59–64 are the holdout. They use the same wiki and new questions. A notes file that only stores earlier answers should miss them. An agent that mapped the wiki should still find them.
 
-```bash
-./tasks/corpus/download.sh
-```
+The judge is `openai/gpt-5.6-luna`. It sees the question, the agent answer, and a hidden gold answer. A paraphrase can still score high. Token overlap is not the score. Oracle writes the gold text. Judge traces are in `reward-details.json`.
 
-Each step is scored by an LLM judge (`openai/gpt-5.6-luna`). The judge sees the
-question, the agent answer, and a hidden gold answer. Paraphrase can still
-score high. Token overlap is not used. The verifier also records `files_opened`
-from the agent trajectory.
+Replace the upstream dump with `./tasks/corpus/download.sh`. `alb prepare corpus` skips that download when `data/` already has files, then runs `generate_steps.py --all`.
 
-Oracle writes the gold text, so a passing oracle run shows the judge is wired.
-A real agent is scored the same way. Judge traces are in `reward-details.json`
-after a job.
+## Learning goal
 
-The last ~10% of `--all` (questions 59–64) is a holdout tail. Same wiki, later
-questions. A mapper should still find them; a notes file that only stores prior
-answers should not.
+The learning object is the map of the frozen wiki. Accuracy should stay high on the holdout while `files_opened` falls. Baseline starts a fresh chat each question. In-context learning resumes the same chat.
 
-## Baseline
+## Reward and cost
 
-Harbor `pi`. Fresh chat each question.
+Harbor averages the per-question reward (`multi_step_reward_strategy = "mean"`). The verifier writes `/logs/verifier/reward.json`:
 
-```bash
-harbor run -p tasks/corpus -a pi -m openai/gpt-5.6-luna \
-  --agent-timeout-multiplier 5 \
-  --job-name corpus-baseline
-```
+| Field | Meaning |
+|---|---|
+| `reward` | Judge score for the answer |
+| `correctness` | Same judge score |
+| `files_opened` | Distinct `/data/corpus/...` paths in the trajectory |
+| `tool_calls` | Tool calls in the step trajectory |
+| `tokens` | Prompt tokens plus completion tokens in that trajectory |
 
-## In-context learning
+Harbor also records `cost_usd`, input tokens, output tokens, and step duration.
 
-Same `pi`, with `--resume-trajectory`. Prior questions stay in the model context.
+## Running
+
+Needs `OPENAI_API_KEY`. The model id is `openai/gpt-5.6-luna`.
 
 ```bash
-harbor run -p tasks/corpus -a pi -m openai/gpt-5.6-luna \
-  --agent-timeout-multiplier 5 \
-  --resume-trajectory \
-  --job-name corpus-icl
+alb prepare corpus
+alb run corpus --system baseline
+alb run corpus --system icl
 ```

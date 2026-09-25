@@ -1,17 +1,63 @@
 # Programming language
 
-Harbor multi-step task: twenty programming problems in one generated language.
-The checked-in instance uses seed 1, generator version 3, task version 0.3.0,
-and `hidden` information. The learning object is **the language**, including
-reusable ways of expressing algorithms in it. One programming problem is one
-step, not one independent trial.
+The agent solves twenty programming problems in one generated language. The token meanings stay fixed. Later problems should be solved on the first submission, with fewer local runs.
 
-The implementation follows [Affinity Arena](../affinity-arena/) for generation,
-protected state, lifecycle, and reporting; [Report check](../report-check/) for
-bounded submissions and feedback; and [Poker](../poker/) for CLI interaction.
-It uses Harbor's existing Docker environment and task loader, with no new
-registry, task runtime dependency, or evaluation framework. An optional thin
-Pi adapter follows the repository's extension pattern to order native tool calls.
+## Task type
+
+Verifiable. `language-lab compile` and `language-lab run` return syntax errors, runtime errors, and integer output during the step. Hidden tests return only a pass count. The agent can edit the program before the step ends. Each problem allows 64 local calls and six hidden submissions.
+
+## Environment
+
+- Checked-in instance: seed 1, generator version 3, task version 0.3.0, `hidden` information
+- Image: `ubuntu:24.04` with Python 3.12. No extra packages.
+- The interpreter cannot import modules, call host code, or read files.
+- Hidden language and tests stay outside the agent workspace.
+- Notes and code: `/app/notes.md` and `/app/workspace/`
+- Public traces: `/app/problems/`
+- Commands: `language-lab status`, `compile`, `run`, `submit`
+
+Files in `/app` persist across the twenty problems. A new trial starts a new container and an empty workspace. The same task directory repeats the same language.
+
+## Step design
+
+One trial is 20 problems. One step is one problem. The language does not change. The problem statement, examples, and hidden tests do.
+
+| Steps | Phase | Role |
+|---|---|---|
+| 1–6 | Foundation | Storage, printing, small transforms |
+| 7–12 | Practice | Arithmetic, counters, conditions |
+| 13–16 | Transfer | New combinations of those idioms |
+| 17–20 | Holdout | Pairwise sums, prefix sums, sum of products, triangular number |
+
+The problem id on a command must match the current problem. A stale command cannot spend the next problem's first submission.
+
+## Learning goal
+
+The learning object is the language: token meanings, cell size, tape edges, input, output, and loop rules. First-submission correctness should rise. Local calls and submissions should fall on new problems, including the holdout. Baseline starts a fresh chat each problem. In-context learning resumes the same chat.
+
+An early-to-late score change by itself is not enough. The phases are not matched difficulty blocks. Compare baseline and in-context learning on the same problems.
+
+## Reward and cost
+
+The reward is the fraction of hidden tests passed on submission 1. No submission scores 0. Later submissions can raise `solved`. They do not replace `reward`. Harbor averages `reward` over the twenty problems.
+
+The verifier writes `/logs/verifier/reward.json`. The fields used for the curve are:
+
+| Field | Meaning |
+|---|---|
+| `reward` | First-submission hidden-test fraction |
+| `solved` | 1 if any submission passed every hidden test |
+| `submissions` | Hidden submission count |
+| `attempts_to_solve` | Index of the first perfect submission, or 0 |
+| `local_calls` | Compile and run requests |
+| `env_actions` | Compile, run, and submit requests |
+| `holdout` | 1 on problems 17–20 |
+
+Harbor records `cost_usd`, input tokens, output tokens, and step duration. Report `reward`, `local_calls`, and `env_actions` on the same chart.
+
+## Details
+
+The sections below keep the language rules, the full metric table, and the generation commands.
 
 ## Trial structure
 

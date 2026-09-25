@@ -1,75 +1,81 @@
 # Web exploration
 
-Evaluate Harbor `pi` on all 187 Shopping-only tasks from the pinned
-[WebArena-Verified](https://github.com/ServiceNow/webarena-verified) dataset.
-The benchmark uses the official WebArena Shopping service, not a bundled mock.
+The agent completes 187 Shopping tasks on one pinned WebArena site. Success should stay high while page visits and tokens fall.
 
-This task runs the **baseline** agent only (`pi`, fresh chat each step).
+## Task type
 
-## Prerequisites
+Non-verifiable. WebArena-Verified scores the response and the HAR after the step. That score does not return to the agent. The agent can browse the site during the step.
 
-- Docker Desktop with the `docker` CLI on `PATH` (or `~/.docker/bin/docker`)
-- Enough free disk for the 17.8 GB Shopping image
-- [Harbor](https://www.harborframework.com/docs)
-- `OPENAI_API_KEY`
-- On the host, `host.docker.internal` must resolve to this machine so Magento
-  and the Harbor container share one origin. If
-  `python3 -c 'import socket; print(socket.gethostbyname("host.docker.internal"))'`
-  fails, add `127.0.0.1 host.docker.internal` to `/etc/hosts`.
+## Environment
 
-Use the OpenAI model id `gpt-5.6-luna` (dot, not hyphen).
+The site is the official WebArena Shopping service. It is not a mock inside the image.
 
-Paste each command as a single line. A line break turns the next flag into a
-zsh command, for example `zsh: command not found: --agent-timeout-multiplier`.
+- Shopping: `http://host.docker.internal:7770`
+- Env-ctrl: port `7771` on the host
+- Reset broker: `http://host.docker.internal:7772`
+- Shopping image: about 17.8 GB, downloaded on the first reset
+- Agent tools: `agent-browser` CLI and skill in the task image
+- Network: `public`
+- Agent timeout: 180 seconds per task
+- Dataset pin: WebArena-Verified commit `6473f72`
 
-## Entire setup
+`host.docker.internal` must resolve to this machine. If it does not, add `127.0.0.1 host.docker.internal` to `/etc/hosts`.
 
-Keep the broker running in one terminal. Harbor runs in another.
+Each step resets Magento, then logs in as the WebArena shopping customer. Login state does not survive a reset. Do not generate cookie files.
+
+`steps/` and `task.toml` are generated and gitignored. A new trial starts a new Harbor container. The Shopping service stays up on the host.
+
+## Step design
+
+One trial is 187 Shopping-only tasks. One step is one task. The agent writes a response. The verifier scores that response and the network HAR.
+
+```bash
+./tasks/web-exploration/download.sh
+python3 tasks/web-exploration/generate_steps.py --n 3   # smoke
+python3 tasks/web-exploration/generate_steps.py         # all 187
+```
+
+If you generate a smoke slice, generate all 187 steps again before a full run. This task has no separate holdout split in the README. Later tasks on the same site are the transfer check.
+
+## Learning goal
+
+The learning object is the Shopping site structure and the navigation that repeats across tasks. Accuracy should stay high while `pages_visited` and tokens fall. Baseline starts a fresh chat each task. In-context learning resumes the same chat. Compare them on the same task order.
+
+## Reward and cost
+
+Harbor averages the per-task reward (`multi_step_reward_strategy = "mean"`). The verifier writes `/logs/verifier/reward.json`:
+
+| Field | Meaning |
+|---|---|
+| `reward` | WebArena-Verified score |
+| `correctness` | Same score |
+| `pages_visited` | Pages recorded for the step |
+| `tool_calls` | Tool calls in the step trajectory |
+| `tokens` | Prompt tokens plus completion tokens in that trajectory |
+
+Harbor also records `cost_usd`, input tokens, output tokens, and step duration.
+
+## Running
+
+Needs Docker, Harbor, and `OPENAI_API_KEY`. The model id is `openai/gpt-5.6-luna`. Keep the broker in one terminal:
 
 ```bash
 python3 tasks/web-exploration/reset_broker.py
 ```
 
-First time only, wait until Shopping is healthy. `/reset` returns right away;
-repeat `/status` until it reports `"success": true`:
+Wait until Shopping is healthy. `/reset` returns immediately. Repeat `/status` until it reports `"success": true`:
 
 ```bash
 curl -X POST http://localhost:7772/reset
 curl http://localhost:7772/status
 ```
 
-Then download the dataset once:
+Paste each Harbor command as one line.
 
 ```bash
-./tasks/web-exploration/download.sh
+alb prepare web-exploration
+alb run web-exploration --system baseline
+alb run web-exploration --system icl
 ```
 
-Smoke is three tasks to check the image. Full is the 187-task run. Pick one.
-If you smoke first, regenerate all 187 steps before full.
-
-### Three-task smoke (optional)
-
-```bash
-python3 tasks/web-exploration/generate_steps.py --n 3
-harbor run -p tasks/web-exploration -a pi -m openai/gpt-5.6-luna --agent-timeout-multiplier 5 --job-name webarena-shopping-baseline-smoke-3
-```
-
-### All 187 tasks
-
-```bash
-python3 tasks/web-exploration/generate_steps.py
-harbor run -p tasks/web-exploration -a pi -m openai/gpt-5.6-luna --agent-timeout-multiplier 5 --job-name webarena-shopping-baseline-full-v2
-```
-
-Each Harbor step recreates Magento, then logs in after each reset as the
-official WebArena shopping customer. Do not generate cookie files; Magento
-login state does not survive reset.
-
-Shopping is served at `http://host.docker.internal:7770` (port `7770` on the
-host). Env-ctrl stays on `7771` for the broker's health checks. Harbor task
-containers call the broker at `http://host.docker.internal:7772`. The first
-reset downloads the Shopping image and can take several minutes.
-
-The benchmark image installs the `agent-browser` skill and CLI. The agent
-uses it to operate Shopping. The verifier scores the response and HAR with
-WebArena-Verified.
+`alb prepare` downloads the dataset when `data/` is empty, then generates steps.

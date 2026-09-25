@@ -132,7 +132,7 @@ Give the task one learning object and enough steps that a curve can show a trend
 
 ## Tasks
 
-All tasks are runnable except Courier / Picker, which is a design only.
+All tasks are runnable except Courier / Picker and Sokoban, which are designs only.
 
 | Task | Domain | Learning object |
 |---|---|---|
@@ -144,8 +144,9 @@ All tasks are runnable except Courier / Picker, which is a design only.
 | [Courier / Picker](tasks/courier-picker/) | Verifiable | A fixed spatial map (design only) |
 | [Corpus](tasks/corpus/) | Non-verifiable | A frozen Confluence wiki map |
 | [Codebase Q&A](tasks/codebase-qa/) | Non-verifiable | Flask hierarchy and call patterns |
-| [Database analytics](tasks/database-analytics/) | Verifiable | Formula 1 schema and query patterns |
+| [Database analytics](tasks/database-analytics/) | Non-verifiable | Formula 1 schema and query patterns |
 | [Web exploration](tasks/web-exploration/) | Non-verifiable | WebArena-Verified Shopping structure and navigation across 187 tasks with `agent-browser` |
+| [Sokoban](tasks/sokoban/) | Verifiable | One fixed board across episodes (design only) |
 
 ## Contributing a task
 
