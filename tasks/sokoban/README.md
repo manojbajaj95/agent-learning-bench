@@ -1,45 +1,85 @@
 # Sokoban
 
-The agent solves several Sokoban puzzles on one fixed wall layout. Later puzzles should take fewer wasted moves. This directory is a design only. It has no `task.toml`. `alb prepare sokoban` rejects it.
+## Short Brief
 
-## Task type
+A persistent, partially observable Sokoban task designed to evaluate whether an agent can learn from experience across multiple episodes.
 
-Verifiable. A move into a wall fails at once. A blocked push fails at once. The agent can choose another move in the same puzzle.
+The Sokoban board remains fixed throughout a trial: walls, boxes, and goals do not change. The player's starting position changes between episodes. The agent has a limited action budget and observes only the local region around its current position.
 
-## Labels
+The task measures whether experience from earlier episodes helps the agent make better decisions and solve later episodes more efficiently.
 
-`fixed`, `ordered`. The wall layout stays the same on every run. Episode order is the curriculum.
+## Verifiable / Non-Verifiable
+
+**Verifiable**
+
+The environment can deterministically verify:
+
+- Whether the puzzle was solved.
+- The number of actions taken.
+- Whether the action limit was exceeded.
+
+**Non-verifiable**
+
+The task does not directly verify what the agent internally remembers or how it represents its experience. Learning is evaluated through changes in behavior and performance across episodes.
 
 ## Environment
 
-Planned container:
+The environment contains a single fixed Sokoban board with:
 
-- One wall and floor layout for the whole trial
-- Box positions, goal positions, and the player start can change each episode
-- The agent sees the board cells it has entered and the failures of illegal moves
-- Hidden solution data stays outside `/app`
-- Notes stay in `/app` and persist across episodes
+- Fixed wall positions.
+- Fixed box positions.
+- Fixed goal positions.
+- A fixed board layout and game rules.
+- A player whose starting position changes between episodes.
 
-The player can move to an empty floor cell and can push one box into an empty floor cell. The player cannot pull a box, push a box through a wall, or push a box through another box. The puzzle is complete when every box is on a goal.
+The board configuration remains unchanged throughout the trial.
 
-## Step design
+The agent receives only a local observation around its current position rather than the complete board. This requires the agent to discover the environment through interaction.
 
-One trial is an ordered list of episodes. One step is one episode. The wall layout stays fixed. The box plan, the goals, and the player start change.
+## Step Design
 
-The holdout is a new box and goal plan on that same layout. It checks transfer of the board, not memory of one solution.
+Each step corresponds to one episode of the same Sokoban environment.
 
-Episode count, board size, and the exact holdout split are not chosen yet.
+Across episodes:
 
-## Learning goal
+- The underlying board remains unchanged.
+- The player's starting position changes.
+- The agent has a limited number of actions.
+- The agent receives local observations as it moves.
+- The agent can use experience from previous episodes when making decisions in later episodes.
 
-The learning object is the fixed board: walls, connections, dead ends, and cells where a box gets stuck. Moves and pushes should fall toward the optimum while completion stays high. Baseline starts a fresh chat each episode. In-context learning resumes the same chat.
+The episodes are ordered so that experience can accumulate over time, but later episodes are not simply copies of earlier episodes.
 
-## Reward and cost
+A later episode may require the agent to revisit situations it encountered previously, allowing previously acquired knowledge to affect its decisions.
 
-The reward is not implemented. Each episode should score completion and efficiency. Record:
+## Learning Goal
+
+The goal is to determine whether the agent can use experience accumulated from previous episodes to improve its subsequent behavior.
+
+Experience consists of relationships between situations, actions, and outcomes. For example, if the agent pushes a box against a wall and observes that the box does not move, repeatedly attempting the same push is unnecessary. When the agent encounters the same or a structurally similar situation later, it can use that previous experience to choose a different action.
+
+Through repeated interaction, the agent may learn:
+
+- Which actions are ineffective in particular situations.
+- Which box movements lead to useful or undesirable states.
+- Which areas of the board are dead ends or useful routes.
+- Which previously discovered actions or sub-solutions can be reused.
+
+The task therefore evaluates **behavioral reuse of experience**, rather than whether the agent explicitly records notes or uses a particular learning mechanism.
+
+## Reward and Cost Metrics
+
+The primary reward measures whether the episode is successfully solved.
+
+- **Reward:** `1` if the puzzle is solved, otherwise `0`.
+- **Cost:** the number of actions used during the episode.
+
+A successful episode can therefore become cheaper over time as the agent gains experience.
+
+For example:
 
 ```text
-turn, reward, solved, moves, pushes, deadlocks, optimal_moves, tokens, wall_sec
-```
-
-`reward` should rise when the puzzle is solved in fewer moves than the action budget. A timeout or a deadlock scores 0. `tokens` and `wall_sec` come from the Harbor job. The learning curve is moves and pushes falling across episodes, including the holdout.
+Episode 1:  Solved — 150 actions
+Episode 2:  Solved — 121 actions
+Episode 3:  Solved —  96 actions
+Episode 4:  Solved —  74 actions
