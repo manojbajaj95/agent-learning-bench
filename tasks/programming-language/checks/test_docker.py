@@ -76,8 +76,9 @@ def test_private_files_commands_and_source_paths(container):
         ["sudo", "-n", "/bin/sh"],
         ["sudo", "-n", "PYTHONPATH=/app/workspace", "/usr/local/libexec/language-public", "status"],
         ["rm", "/app/view.txt"],
-        ["mv", "/app/problems", "/app/workspace/problems"],
-        ["ln", "-s", "/opt/programming-language/trial.json", "/app/problems/problem-01.jsonl"],
+        ["mv", "/app/workspace", "/app/elsewhere"],
+        ["touch", "/app/notes.md"],
+        ["mkdir", "/app/problems"],
         ["sh", "-c", "language-lab compile problem-01 < /opt/programming-language/trial.json"],
     ]
     for argv in forbidden:
@@ -114,11 +115,14 @@ f.chmod(0o600)
 """
     assert command(container, "python3", "-c", setup, user="root").returncode == 0
     assert command(container, "cat", "/logs/agent/pi/sessions/session.jsonl").returncode != 0
-    assert command(container, "sh", "-c", "echo keep > /app/notes.md").returncode == 0
     trial_before = command(
         container, "cat", "/opt/programming-language/trial.json", user="root"
     ).stdout
     for index in range(1, 21):
+        # A baseline step finds nothing from the previous problem in /app.
+        listing = command(container, "ls", "-A", "/app", "/app/workspace").stdout.split()
+        assert sorted(listing) == ["/app/workspace:", "/app:", "view.txt", "workspace", "world"]
+        assert command(container, "sh", "-c", "echo keep > /app/workspace/notes.md").returncode == 0
         script = (TASK / f"steps/problem-{index:02d}/solution/solve.sh").read_text()
         result = command(container, "bash", source=script)
         assert result.returncode == 0, result.stderr
@@ -127,8 +131,13 @@ f.chmod(0o600)
         assert settled.returncode == 0, settled.stderr
         reward = command(container, "cat", "/logs/verifier/reward.json", user="root").stdout
         assert json.loads(reward)["reward"] == 1
+        text = command(container, "cat", "/logs/verifier/reward.txt", user="root").stdout
+        assert float(text) == 1
+        assert (
+            command(container, "test", "-s", "/logs/verifier/trace.jsonl", user="root").returncode
+            == 0
+        )
         assert command(container, "cat", "/logs/verifier/reward.json").returncode != 0
-        assert command(container, "cat", "/app/notes.md").stdout.strip() == "keep"
     assert command(container, "cat", "/logs/agent/pi/sessions/session.jsonl").stdout == "first\n"
     assert command(container, "cat", "/logs/agent/pi/sessions/private-link").returncode != 0
     assert (

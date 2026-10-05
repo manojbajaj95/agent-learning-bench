@@ -17,10 +17,9 @@ RUN chmod 700 /opt/programming-language \
        > /etc/sudoers.d/language-lab \
     && chmod 440 /etc/sudoers.d/language-lab \
     && visudo -cf /etc/sudoers.d/language-lab \
-    && mkdir -p /app/problems /app/sessions /app/workspace /logs/verifier \
-    && touch /app/notes.md \
-    && chown agent:agent /app/notes.md /app/sessions /app/workspace \
-    && chmod 755 /app /app/world /app/problems \
+    && mkdir -p /app/workspace /logs/verifier \
+    && chown agent:agent /app/workspace \
+    && chmod 755 /app /app/world \
     && chmod 700 /logs/verifier \
     && /usr/bin/python3 -I /opt/programming-language/admin.py start 1 > /dev/null
 
