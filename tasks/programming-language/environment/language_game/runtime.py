@@ -5,6 +5,7 @@ from __future__ import annotations
 import fcntl
 import json
 import os
+import shutil
 import tempfile
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -64,16 +65,21 @@ class Runtime:
         atomic_write(self.paths.private / "state.json", json.dumps(data) + "\n")
 
     def publish(self, data: dict) -> str:
-        current = data["current"]
-        text = render(self.trial, current)
+        text = render(self.trial, data["current"])
         atomic_write(self.paths.public / "view.txt", text, 0o644)
-        # Events contain only source/inputs supplied by the agent and public responses.
-        atomic_write(
-            self.paths.public / "problems" / f"problem-{current['index']:02d}.jsonl",
-            "".join(json.dumps(e) + "\n" for e in current["events"]),
-            0o644,
-        )
         return text
+
+    def clear_workspace(self) -> None:
+        """Each problem starts with an empty workspace; only a resumed chat carries over."""
+        workspace = self.paths.public / "workspace"
+        if not workspace.is_dir():
+            return
+        for entry in os.scandir(workspace):
+            # rmtree never follows agent symlinks on Linux (fd-based traversal).
+            if entry.is_dir(follow_symlinks=False):
+                shutil.rmtree(entry.path)
+            else:
+                os.unlink(entry.path)
 
     def start(self, index: int) -> str:
         with self.locked():
@@ -85,6 +91,7 @@ class Runtime:
                 raise ValueError("problems must start in order after settlement")
             if current and not current["settled"]:
                 raise ValueError("previous problem is not settled")
+            self.clear_workspace()
             data["current"] = {
                 "index": index,
                 "local_calls": 0,
@@ -247,8 +254,17 @@ class Runtime:
     def export_verifier(self, record: dict) -> None:
         self.paths.verifier.mkdir(parents=True, exist_ok=True)
         self.paths.verifier.chmod(0o700)
+        atomic_write(self.paths.verifier / "reward.txt", f"{record['metrics']['reward']}\n", 0o644)
         atomic_write(
             self.paths.verifier / "reward.json", json.dumps(record["metrics"]) + "\n", 0o644
+        )
+        # The command trace leaves through the verifier, never through /app, so a
+        # fresh-chat step cannot read earlier programs. Events hold only
+        # agent-supplied source/inputs and public responses.
+        atomic_write(
+            self.paths.verifier / "trace.jsonl",
+            "".join(json.dumps(e) + "\n" for e in record["events"]),
+            0o644,
         )
         problem = self.trial["problems"][record["index"] - 1]
         atomic_write(

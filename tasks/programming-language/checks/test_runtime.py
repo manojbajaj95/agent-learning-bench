@@ -144,8 +144,10 @@ def test_feedback_does_not_explain_rules_or_leak_hidden_tests(runtime):
         response = json.loads(runtime.command(["submit", "problem-01"], source))
         assert set(response) == {"submission", "passed", "total", "score"}
         assert response["score"] == 0
-    events = (runtime.paths.public / "problems/problem-01.jsonl").read_text()
     view = runtime.command(["status"])
+    metrics = runtime.settle(1)
+    events = (runtime.paths.verifier / "trace.jsonl").read_text()
+    assert len(events.splitlines()) == 5
     for secret in (
         "hidden_tests",
         "operations",
@@ -160,7 +162,6 @@ def test_feedback_does_not_explain_rules_or_leak_hidden_tests(runtime):
     ):
         assert secret not in events + view
     assert "tape machine" not in view
-    metrics = runtime.settle(1)
     assert metrics["compiler_errors"] == 2
     assert metrics["runtime_errors"] == 2  # One local failure and one failing submission.
 
@@ -176,26 +177,33 @@ def test_input_and_source_validation_is_bounded(runtime):
     assert runtime.load()["current"]["compiler_calls"] == 1
 
 
-def test_full_trial_memory_persistence_and_independent_reset(runtime_factory):
+def test_full_trial_keeps_language_and_leaves_no_files_between_problems(runtime_factory):
     runtime = runtime_factory()
     language = runtime.language
-    notes = runtime.paths.public / "notes.md"
-    notes.write_text("discovered information")
-    helper = runtime.paths.public / "workspace/generator.py"
-    helper.write_text("# reusable helper")
+    workspace = runtime.paths.public / "workspace"
+    outside = runtime.paths.private.parent / "outside.txt"
+    outside.write_text("not agent state")
     for index in range(1, 21):
         runtime = Runtime(runtime.paths)
         runtime.start(index)
         assert runtime.language == language
-        assert notes.read_text() == "discovered information"
-        assert helper.read_text() == "# reusable helper"
+        assert not list(workspace.iterdir())
         assert runtime.load()["current"]["local_calls"] == 0
+        # Leftovers of every kind, including a link that must not be followed.
+        (workspace / "solution.lang").write_text("earlier program")
+        (workspace / ".hidden").write_text("earlier note")
+        (workspace / "helpers").mkdir()
+        (workspace / "helpers/generator.py").write_text("# reusable helper")
+        (workspace / "link").symlink_to(outside)
         result = json.loads(
             runtime.command(["submit", f"problem-{index:02d}"], oracle_source(runtime, index))
         )
         assert result["score"] == 1
         assert runtime.settle(index)["reward"] == 1
-    assert len(list((runtime.paths.public / "problems").glob("*.jsonl"))) == 20
+        assert (runtime.paths.verifier / "reward.txt").read_text() == "1.0\n"
+        assert (runtime.paths.verifier / "trace.jsonl").read_text().count("\n") == 1
+    assert outside.read_text() == "not agent state"
+    assert sorted(p.name for p in runtime.paths.public.iterdir()) == ["view.txt", "workspace"]
     with pytest.raises(ValueError):
         runtime.start(21)
     fresh = runtime_factory("independent", seed=2)
@@ -203,7 +211,6 @@ def test_full_trial_memory_persistence_and_independent_reset(runtime_factory):
     assert fresh.language != language
     assert fresh.load()["completed"] == []
     assert fresh.load()["current"]["submissions"] == []
-    assert not (fresh.paths.public / "notes.md").exists()
     assert not list((fresh.paths.public / "workspace").iterdir())
 
 

@@ -42,7 +42,7 @@ def generated_files(seed: int = 1, visibility: str = "hidden") -> dict[str, str]
     instruction = (ROOT / "instruction.md").read_text()
     toml = f'''schema_version = "1.4"
 multi_step_reward_strategy = "mean"
-artifacts = ["/app/view.txt", "/app/notes.md", "/app/workspace", "/app/sessions"]
+artifacts = ["/app/view.txt", "/app/workspace"]
 
 [task]
 name = "agent-learning-bench/programming-language"
@@ -92,7 +92,7 @@ workdir = "/app"
             f"{source}\nLANGUAGE_EOF\n"
             f"language-lab submit {name} < /app/workspace/solution.lang\n"
         )
-        toml += f'\n[[steps]]\nname = "{name}"\nartifacts = ["/app/problems/{name}.jsonl"]\n'
+        toml += f'\n[[steps]]\nname = "{name}"\n'
     files["task.toml"] = toml
     return files
 

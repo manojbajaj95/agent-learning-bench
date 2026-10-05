@@ -19,8 +19,7 @@ def runtime_factory(tmp_path):
         root = tmp_path / name
         paths = Paths(root / "private", root / "app", root / "verifier")
         paths.private.mkdir(parents=True)
-        (paths.public / "problems").mkdir(parents=True)
-        (paths.public / "workspace").mkdir()
+        (paths.public / "workspace").mkdir(parents=True)
         (paths.private / "trial.json").write_text(json.dumps(generate_trial(seed, visibility)))
         return Runtime(paths)
 

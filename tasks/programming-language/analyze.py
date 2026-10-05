@@ -11,7 +11,7 @@ from statistics import mean
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT.parents[1]))
-from tools.report_runs import summarize_trial
+from alb.report import summarize_trial
 
 from language_agent.trace import read_pi_errors
 

@@ -1,6 +1,6 @@
 import json
 
-from tools.report_runs import summarize_trial
+from alb.report import summarize_trial
 
 from analyze import METRICS, analyze_job, report
 

@@ -16,11 +16,10 @@ Verifiable. `language-lab compile` and `language-lab run` return syntax errors, 
 - Image: `ubuntu:24.04` with Python 3.12. No extra packages.
 - The interpreter cannot import modules, call host code, or read files.
 - Hidden language and tests stay outside the agent workspace.
-- Notes and code: `/app/notes.md` and `/app/workspace/`
-- Public traces: `/app/problems/`
+- Code: `/app/workspace/`, emptied when each problem starts
 - Commands: `language-lab status`, `compile`, `run`, `submit`
 
-Files in `/app` persist across the twenty problems. A new trial starts a new container and an empty workspace. The same task directory repeats the same language.
+Nothing the agent writes carries to the next problem. The harness empties `/app/workspace/` at each problem start, and the command trace goes to the verifier output, not `/app`. Only the language persists. A new trial starts a new container. The same task directory repeats the same language.
 
 ## Step design
 
@@ -35,9 +34,11 @@ One trial is 20 problems. One step is one problem. The language does not change.
 
 The problem id on a command must match the current problem. A stale command cannot spend the next problem's first submission.
 
+Later problems retest earlier skills. Prefix sums (20) reuse the running sum from problems 10 and 13. The triangular number (19) reuses the counting loop from problems 8 and 9. Pairwise sums (18) reuse addition (7) inside the stream loop (15).
+
 ## Learning goal
 
-The learning object is the language: token meanings, cell size, tape edges, input, output, and loop rules. First-submission correctness should rise. Local calls and submissions should fall on new problems, including the holdout. Baseline starts a fresh chat each problem. In-context learning resumes the same chat.
+The learning object is the language: token meanings, cell size, tape edges, input, output, and loop rules. First-submission correctness should rise. Local calls and submissions should fall on new problems, including the holdout. Baseline starts a fresh chat each problem and finds no files or traces from earlier problems. In-context learning resumes the same chat, so the chat is the only thing that carries over.
 
 An early-to-late score change by itself is not enough. The phases are not matched difficulty blocks. Compare baseline and in-context learning on the same problems.
 
@@ -45,7 +46,7 @@ An early-to-late score change by itself is not enough. The phases are not matche
 
 The reward is the fraction of hidden tests passed on submission 1. No submission scores 0. Later submissions can raise `solved`. They do not replace `reward`. Harbor averages `reward` over the twenty problems.
 
-The verifier writes `/logs/verifier/reward.json`. The fields used for the curve are:
+The verifier writes `/logs/verifier/reward.txt` with the `reward` value, and `/logs/verifier/reward.json` with every metric. It also writes `trace.jsonl`, the step's commands and public responses. The fields used for the curve are:
 
 | Field | Meaning |
 |---|---|
@@ -67,7 +68,7 @@ The sections below keep the language rules, the full metric table, and the gener
 
 ```text
 new container, one generated language
-    problem 1 -> notes, code, helpers -> problem 2 -> ... -> problem 20
+    problem 1 -> empty workspace -> problem 2 -> ... -> problem 20
 ```
 
 The token mapping, arithmetic, tape, input/output behavior, loop behavior,
@@ -77,13 +78,14 @@ and expected outputs change. Each compile/run/submission receives source in
 the unfamiliar language. Every execution, including each hidden test, begins
 with fresh zeroed cells and fresh input/output buffers.
 
-Agent files persist in `/app/notes.md` and `/app/workspace/`. Public command
-traces persist in `/app/problems/`. Host-language helpers and generators are
-allowed; only the generated target-language source executes during grading.
-The interpreter cannot call host code, import modules, or read files.
+The root lifecycle empties `/app/workspace/` when it starts each problem.
+Harbor collects the workspace as a step artifact before that. Command traces
+are written to `/logs/verifier/trace.jsonl` at settlement and never to `/app`.
+Host-language helpers and generators are allowed within a problem; only the
+generated target-language source executes during grading. The interpreter
+cannot call host code, import modules, or read files.
 
-Independent Harbor trials use new containers with empty notes, workspace,
-and sessions. Repeating a trial from the same task directory repeats the same
+Independent Harbor trials use new containers. Repeating a trial from the same task directory repeats the same
 language and problem sequence. Generate another seed to change the language.
 Harbor's own job/trial identifiers do not select this task's language seed.
 
@@ -157,9 +159,9 @@ while also consuming input and updating an accumulator. Sum of products combines
 nested loops, copying, and reused input cells. Transfer and holdout each have a
 seeded order; the prerequisite sequence remains fixed.
 
-These phases are **not matched difficulty blocks**. Compare memory conditions
-on the *same* seeded problems with the same budgets, then examine correctness,
-costs, and retained helpers. An early-to-late score change alone is not evidence
+These phases are **not matched difficulty blocks**. Compare baseline and
+in-context learning on the *same* seeded problems with the same budgets, then
+examine correctness and costs. An early-to-late score change alone is not evidence
 of learning. Small domains and bounded loop counts keep compositions manageable,
 but real-agent runs are needed to calibrate difficulty and budget.
 
@@ -232,7 +234,8 @@ but do not replace the first reward.
 For example, passing 4/10 tests and then 10/10 earns primary reward **0.4**,
 with eventual `solved=1` and `attempts_to_solve=2`.
 
-Each verifier writes numeric metrics to `/logs/verifier/reward.json`:
+Each verifier writes `reward` to `/logs/verifier/reward.txt` and all numeric
+metrics to `/logs/verifier/reward.json`. Harbor reads the JSON when both exist:
 
 | Metric | Meaning |
 |---|---|
@@ -257,10 +260,11 @@ Token usage, model cost, and agent duration come from Harbor's existing result
 records. Sum `solved` over steps for problems solved; Harbor's mean aggregation
 reports the solve rate. Private `problem.json` verifier artifacts retain seed,
 version, information mode, phase, family, and source submission snapshots.
+`trace.jsonl` keeps every compile, run, and submit request with its public response.
 
 The expected signals are improving first-submission correctness, high eventual
-success, and fewer local calls/submissions on the same novel jobs across memory
-conditions.
+success, and fewer local calls/submissions on the same novel jobs for in-context
+learning compared with baseline.
 Report all curves together. An aggregate final score alone does not establish
 learning, and missing/failed steps must be flagged rather than silently dropped.
 
@@ -344,18 +348,27 @@ With Docker running, first check the oracle (no model API key required):
   --job-name language-oracle --jobs-dir jobs -n 1 --max-retries 0
 ```
 
-Use the same model and generated task across memory conditions. Export the
-model provider's credentials through your shell; substitute its provider/model
-identifier below. Use distinct job names for independent runs.
+The official runs use the bench CLI with the same task, model, and step order:
 
 ```bash
-# Baseline: fresh conversation per problem, persistent files, ordered tools.
+alb run programming-language --system baseline
+alb run programming-language --system icl
+alb report <job name>
+```
+
+Use the same model and generated task in both systems. Export the model
+provider's credentials through your shell. The commands below run the optional
+ordered-tools adapter directly; substitute the provider/model identifier and
+use distinct job names for independent runs.
+
+```bash
+# Baseline: fresh conversation per problem, empty workspace, ordered tools.
 PYTHONPATH=tasks/programming-language .venv/bin/harbor run \
   -p tasks/programming-language -a language_agent.agent:SequentialPi -m PROVIDER/MODEL \
   --ak version=0.85.1 \
   --job-name language-baseline --jobs-dir jobs -n 1 --max-retries 0
 
-# In-context: resume the conversation across problems, with persistent files.
+# In-context: resume the conversation across problems; the chat is the only carry-over.
 PYTHONPATH=tasks/programming-language .venv/bin/harbor run \
   -p tasks/programming-language -a language_agent.agent:SequentialPi -m PROVIDER/MODEL \
   --ak version=0.85.1 \
@@ -395,7 +408,8 @@ Use identical timeout multipliers and the same `--ak version=...` Pi version
 for matched experiments. These commands invoke model APIs and use their quota.
 
 ```bash
-python3 tools/report_runs.py --jobs-dir jobs --task programming-language --out-dir reports
+alb report language-baseline
+alb report language-icl
 python3 tasks/programming-language/analyze.py jobs/language-baseline jobs/language-icl \
   --require-complete --out-dir tasks/programming-language/results/comparison
 ```
@@ -404,11 +418,12 @@ The task-specific report preserves the shared summarizer's score/token/cost
 handling and adds per-problem and phase metrics. Read the result's task metadata
 and verifier artifacts to verify seed and information condition matches.
 
-The ordinary baseline retains files and can learn. A real no-memory control
-must start a fresh sandbox and conversation for each matched problem, as in
-Affinity Arena's task-local `run_no_memory.py`. This MVP does not provide that
-runner or describe fresh-chat runs as stateless. Its runtime/generation split
-allows adding such a control without changing language semantics or grading.
+Baseline keeps nothing between problems. Each problem starts a fresh chat with
+an empty `/app/workspace/`, and earlier command traces exist only in verifier
+output, which the agent cannot read. Neither the instruction nor the rules
+mention notes or sessions. The task does not clear `/tmp` or the agent's home
+directory, because the Pi installation lives there; nothing points the agent to
+those paths.
 
 ## Isolation and lifecycle
 
@@ -416,7 +431,8 @@ The agent runs as an unprivileged user. The language, test bank, interpreter,
 and authoritative state live under root-only `/opt/programming-language`.
 The narrow sudo entrypoint uses isolated Python imports and accepts only public
 commands. Public view/log parent directories cannot be replaced by the agent;
-notes and workspace remain writable. State is locked and atomically written.
+the workspace is writable and emptied when each problem starts. State is locked
+and atomically written.
 
 Harbor 0.22 runs setup hooks as the agent. The image initializes problem 1;
 each root verifier freezes that problem's result and prepares the next one.
@@ -447,7 +463,7 @@ input/output/loop combinations on the smallest tape and modulus; nested loops;
 syntax, runtime, input and resource limits; cross-process determinism; all
 reference solutions across 100 seeds; matched information conditions; novel
 holdouts; observable and consequential semantics; first-score freezing; budgets;
-concurrent submissions; and persistence/reset. Docker tests cover actual user
+concurrent submissions; and workspace reset between problems. Docker tests cover actual user
 permissions, all twenty oracle steps, resumed-log access, and Harbor's full
 oracle lifecycle in seed-1 hidden and seed-2 partial conditions. They explicitly
 skip if Docker is unavailable. A cancellation regression checks that expired
@@ -478,9 +494,8 @@ tests equally and does not balance branches.
 
 Real-agent pilots showed reusable loop/branch helpers, but runner interruptions
 prevented a clean transfer evaluation. Sustained learning and a causal memory
-benefit remain unverified. Run matched memory and information conditions on the
-same seeded problems; fresh chats with persistent files are not a no-memory
-control. A fresh-sandbox per-problem runner remains future work.
+benefit remain unverified. Run baseline and in-context learning on the same
+seeded problems, model, and step order.
 
 The curriculum is not calibrated to comparable difficulty across phases.
 Print-twice can require copying and loops when output clears a cell; earlier
